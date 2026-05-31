@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Posição Financeira · Solutis</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e29;
+  --br:rgba(255,255,255,.06);--br2:rgba(255,255,255,.12);
+  --tx:#e8eaf0;--tx2:#8b90a0;--tx3:#4a4f62;
+  --ac:#4f8ef7;--gn:#22c55e;--rd:#f43f5e;--am:#f59e0b;--vi:#a78bfa;--tl:#14b8a6;
+  --r:10px;--rs:7px;--sb:214px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--tx);font-family:"DM Sans",sans-serif;font-size:14px;line-height:1.5;display:flex;flex-direction:column}
+.shell{display:flex;flex:1;min-height:0;position:relative}
+/* sidebar */
+.sb{width:var(--sb);background:var(--bg2);border-right:1px solid var(--br);padding:22px 16px;display:flex;flex-direction:column;gap:22px;overflow-y:auto;flex-shrink:0;transition:width .22s,padding .22s,opacity .22s}
+.sb.off{width:0;padding:0;opacity:0;pointer-events:none;overflow:hidden}
+/* no mobile a sidebar flutua por cima do conteúdo */
+@media(max-width:640px){
+  .sb{position:absolute;top:0;left:0;height:100%;z-index:30;width:88vw;max-width:300px;box-shadow:4px 0 24px rgba(0,0,0,.5)}
+  .sb.off{width:0}
+  .tog{position:fixed;top:14px;left:10px;z-index:40}
+  html,body{overflow:auto}
+  .shell{min-height:100vh;height:auto}
+  .main{overflow:visible}
+  .krow{grid-template-columns:1fr 1fr!important}
+  .mid{grid-template-columns:1fr!important}
+  .content{padding:14px 14px}
+  .topbar{padding:12px 14px 12px 44px}
+  .cw{height:180px}
+}
+/* sidebar */
+.sb{width:var(--sb);background:var(--bg2);border-right:1px solid var(--br);padding:22px 16px;display:flex;flex-direction:column;gap:22px;overflow-y:auto;flex-shrink:0;transition:width .22s,padding .22s,opacity .22s}
+.sb.off{width:0;padding:0;opacity:0;pointer-events:none;overflow:hidden}
+.brand{display:flex;align-items:center;gap:10px}
+.brand img{width:34px;height:34px;object-fit:contain;filter:invert(1) brightness(2);border-radius:4px;flex-shrink:0}
+.b-name{font-size:13px;font-weight:600;letter-spacing:.05em;white-space:nowrap}
+.b-sub{font-size:11px;color:var(--tx3);margin-top:1px;white-space:nowrap}
+.nl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--tx3);margin-bottom:5px;white-space:nowrap}
+.ni{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:var(--rs);font-size:13px;color:var(--tx2)}
+.ni.act{background:rgba(79,142,247,.12);color:var(--ac)}
+label.ft{font-size:11px;color:var(--tx2);display:block;margin-bottom:4px;white-space:nowrap}
+select{background:var(--bg3);border:1px solid var(--br2);border-radius:var(--rs);color:var(--tx);font-family:"DM Sans",sans-serif;font-size:12px;padding:7px 10px;width:100%;cursor:pointer;appearance:none;outline:none}
+select:focus{border-color:var(--ac)}
+.chip{display:flex;align-items:center;gap:8px;padding:5px 7px;border-radius:6px;cursor:pointer;font-size:12px;color:var(--tx3);user-select:none}
+.chip.on{color:var(--tx)}
+.chip:hover{background:var(--bg3)}
+.cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sbf{margin-top:auto;font-size:11px;color:var(--tx3);white-space:nowrap}
+.sbf span{color:var(--tx2);display:block;margin-top:2px}
+.up-btn{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:var(--rs);border:1px dashed var(--br2);font-size:12px;color:var(--tx2);cursor:pointer;width:100%;background:none;font-family:"DM Sans",sans-serif;white-space:nowrap}
+.up-btn:hover{border-color:var(--ac);color:var(--ac)}
+#file-in{display:none}
+/* toggle */
+.tog{position:fixed;top:18px;left:0;z-index:20;width:26px;height:26px;background:var(--bg2);border:1px solid var(--br2);border-radius:0 var(--rs) var(--rs) 0;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--tx2);transition:left .22s}
+.tog:hover{background:var(--bg3);color:var(--tx)}
+/* main */
+.main{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column}
+.topbar{padding:15px 26px;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-left img{width:26px;height:26px;object-fit:contain;filter:invert(1) brightness(2)}
+.tb-title{font-size:15px;font-weight:600}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(34,197,94,.1);color:var(--gn);font-weight:500}
+.tx-sub{font-size:12px;color:var(--tx2)}
+.content{padding:20px 26px;display:flex;flex-direction:column;gap:16px}
+/* kpi */
+.krow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+.kpi{background:var(--bg2);border:1px solid var(--br);border-radius:var(--r);padding:14px 16px;display:flex;flex-direction:column;gap:7px}
+.kpi.kn{border-left:2.5px solid var(--rd)}
+.kpi.kp{border-left:2.5px solid var(--gn)}
+.kpi.kw{border-left:2.5px solid var(--am)}
+.ktop{display:flex;align-items:center;justify-content:space-between}
+.klbl{font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--tx2)}
+.kico{width:25px;height:25px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.kico.n{background:rgba(244,63,94,.1);color:var(--rd)}
+.kico.p{background:rgba(34,197,94,.1);color:var(--gn)}
+.kico.w{background:rgba(245,158,11,.1);color:var(--am)}
+.kval{font-size:20px;font-weight:600;font-family:"DM Mono",monospace;letter-spacing:-.02em}
+.kval.n{color:var(--rd)}.kval.p{color:var(--gn)}.kval.w{color:var(--am)}
+.ksub{font-size:11px;color:var(--tx3)}
+/* card */
+.card{background:var(--bg2);border:1px solid var(--br);border-radius:var(--r);overflow:hidden}
+.ch{padding:13px 17px;border-bottom:1px solid var(--br)}
+.ct{font-size:17px;font-weight:600}
+.cs{font-size:12px;color:var(--tx3);margin-top:2px}
+/* table */
+table{width:100%;border-collapse:collapse}
+thead th{padding:8px 13px;font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--tx3);text-align:left;border-bottom:1px solid var(--br)}
+thead th:last-child{text-align:right}
+tbody td{padding:8px 13px;font-size:13px;border-bottom:1px solid var(--br)}
+tbody td:last-child{text-align:right;font-family:"DM Mono",monospace;font-size:12px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--bg3)}
+.tf td{padding:8px 13px;font-size:12px;font-weight:600;font-family:"DM Mono",monospace;border-top:1px solid var(--br2)}
+.tf td:last-child{text-align:right}
+.tf.fb td{background:rgba(79,142,247,.07);color:var(--ac)}
+.tf.fr td{background:rgba(244,63,94,.07);color:var(--rd)}
+.tf.fg td{background:rgba(34,197,94,.07);color:var(--gn)}
+.vn{color:var(--rd)}.vp{color:var(--gn)}
+/* layouts */
+.mid{display:grid;grid-template-columns:2fr 1.4fr 1.4fr;gap:11px}
+.cw{position:relative;height:210px}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<div id="overlay" onclick="fecharSb()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:25"></div>
+
+<button class="tog" id="tog" onclick="toggleSb()" title="Menu">
+  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+</button>
+
+<aside class="sb" id="sb">
+  <div class="brand">
+    <img src="data:image/png;base64,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" alt="Solutis">
+    <div><div class="b-name">SOLUTIS</div><div class="b-sub">Posição Financeira</div></div>
+  </div>
+
+  <nav>
+    <div class="nl">Navegação</div>
+    <div class="ni act">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+  </nav>
+
+  <div>
+    <div class="nl">Filtros</div>
+    <div style="margin-bottom:11px">
+      <label class="ft" for="sel-pre">Período predefinido</label>
+      <select id="sel-pre" onchange="onPreset()">
+        <option value="">— escolher —</option>
+        <option value="90">Últimos 3 meses</option>
+        <option value="180" selected>Últimos 6 meses</option>
+        <option value="365">Último ano</option>
+        <option value="9999">Todo o período</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:11px">
+      <div><label class="ft">Mês início</label><select id="mi" onchange="onCustom()"><option value="">--</option></select></div>
+      <div><label class="ft">Ano início</label><select id="ai" onchange="onCustom()"><option value="">--</option></select></div>
+      <div><label class="ft">Mês fim</label><select id="mf" onchange="onCustom()"><option value="">--</option></select></div>
+      <div><label class="ft">Ano fim</label><select id="af" onchange="onCustom()"><option value="">--</option></select></div>
+    </div>
+    <div class="nl" style="margin-top:4px">Bancos</div>
+    <div id="chips"></div>
+  </div>
+
+  <div>
+    <div class="nl">Dados</div>
+    <button class="up-btn" onclick="document.getElementById('file-in').click()">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Carregar novo Excel
+    </button>
+    <input type="file" id="file-in" accept=".xlsx,.xls" onchange="loadFile(this.files[0])">
+    <div id="up-st" style="font-size:11px;color:var(--tx3);margin-top:6px;min-height:14px"></div>
+  </div>
+
+  <div class="sbf">Atualizado em<span id="foot-d"></span></div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <img src="data:image/png;base64,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" alt="Solutis">
+      <div class="tb-title" id="tb-title">Posição Financeira</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="tx-sub" id="tb-dua"></span>
+      <span class="badge">● Ao vivo</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- KPIs -->
+    <div class="krow">
+      <div class="kpi kn">
+        <div class="ktop"><span class="klbl">Saldo Bancário</span><div class="kico n">≈</div></div>
+        <div class="kval n" id="kv-banc"></div><div class="ksub" id="ks-banc"></div>
+      </div>
+      <div class="kpi kw">
+        <div class="ktop"><span class="klbl">Crédito INSS</span><div class="kico w">ℹ</div></div>
+        <div class="kval w" id="kv-inss"></div><div class="ksub">Saldo fixo</div>
+      </div>
+      <div class="kpi kn">
+        <div class="ktop"><span class="klbl">Saldo Operacional</span><div class="kico n">↘</div></div>
+        <div class="kval n" id="kv-oper"></div><div class="ksub" id="ks-oper"></div>
+      </div>
+      <div class="kpi kp">
+        <div class="ktop"><span class="klbl">Recebido dia anterior</span><div class="kico p">↓</div></div>
+        <div class="kval p" id="kv-recb"></div><div class="ksub" id="ks-recb"></div>
+      </div>
+    </div>
+
+    <!-- BANCOS + RECEB + PAG -->
+    <div class="mid">
+      <div class="card">
+        <div class="ch"><div class="ct">Saldo por banco</div><div class="cs" id="sub-banc"></div></div>
+        <table><thead><tr><th>Banco</th><th>Saldo (R$)</th></tr></thead>
+          <tbody id="tb-banc"></tbody><tfoot id="tf-banc"></tfoot></table>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Recebimentos</div><div class="cs" id="sub-recb"></div></div>
+        <table><thead><tr><th>Cliente</th><th>Valor (R$)</th></tr></thead>
+          <tbody id="tb-recb"></tbody><tfoot id="tf-recb"></tfoot></table>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Pagamentos</div><div class="cs" id="sub-pag"></div></div>
+        <table><thead><tr><th>Descrição</th><th>Valor (R$)</th></tr></thead>
+          <tbody id="tb-pag"></tbody><tfoot id="tf-pag"></tfoot></table>
+      </div>
+    </div>
+
+    <!-- GRÁFICO SALDO -->
+    <div class="card">
+      <div class="ch"><div class="ct">Evolução do saldo final geral</div><div class="cs">Saldo bancário consolidado diário</div></div>
+      <div style="padding:16px"><div class="cw"><canvas id="ch-saldo"></canvas></div></div>
+    </div>
+
+    <!-- GRÁFICO RECEB/PAG -->
+    <div class="card">
+      <div class="ch"><div class="ct">Recebimentos e pagamentos ao longo do tempo</div><div class="cs">Movimentação diária consolidada</div></div>
+      <div style="padding:16px"><div class="cw"><canvas id="ch-rp"></canvas></div></div>
+    </div>
+  </div>
+</main>
+</div>
+
+<script>
+// ── DADOS BASE (extraídos do Posição_Financeira.xlsx) ────────────
+let HIST = [{"d": "2025-01-02", "B": 3659358.2, "I": 11875141.13, "BB": 117766.94, "BS": 60.2, "S": 164.13, "SF": 0, "T": 15652750.92, "R": 0, "P": -544873.47}, {"d": "2025-01-03", "B": 3640267.73, "I": 8637764.77, "BB": 3342.45, "BS": -0.0, "S": 164.13, "SF": 0, "T": 12281799.4, "R": 0, "P": -3370951.52}, {"d": "2025-01-06", "B": 3682865.46, "I": 8242617.54, "BB": 342.45, "BS": -0.0, "S": 164.13, "SF": 0, "T": 11926249.9, "R": 45247.73, "P": -400797.23}, {"d": "2025-01-07", "B": 3670627.55, "I": 8130054.4, "BB": 292.45, "BS": 43.2, "S": 164.13, "SF": 0, "T": 11801442.05, "R": 0, "P": -124807.85}, {"d": "2025-01-08", "B": 3668353.03, "I": 8045850.84, "BB": 292.45, "BS": 43.2, "S": 164.13, "SF": 0, "T": 11714963.97, "R": 0, "P": -86478.08}, {"d": "2025-01-09", "B": 3668353.03, "I": 7978574.81, "BB": 231.1, "BS": 43.2, "S": 164.13, "SF": 0, "T": 11647626.59, "R": 4017.99, "P": -71355.37}, {"d": "2025-01-10", "B": 3676014.87, "I": 7790876.83, "BB": 51.1, "BS": 43.2, "S": 70818.09, "SF": 0, "T": 11538064.41, "R": 296606.18, "P": -406168.36}, {"d": "2025-01-13", "B": 3646173.98, "I": 7734274.05, "BB": 51.1, "BS": 43.2, "S": 818.09, "SF": 0, "T": 11381620.74, "R": 0, "P": -156443.67}, {"d": "2025-01-14", "B": 3642543.43, "I": 7728731.78, "BB": 51.1, "BS": 43.2, "S": 808.19, "SF": 0, "T": 11372438.02, "R": 0, "P": -9182.72}, {"d": "2025-01-15", "B": 3931642.78, "I": 7620165.09, "BB": 51.1, "BS": 43.2, "S": 808.19, "SF": 0, "T": 11552970.68, "R": 309469.03, "P": -128936.37}, {"d": "2025-01-16", "B": 3931119.53, "I": 7541370.08, "BB": 51.1, "BS": 43.2, "S": 808.19, "SF": 0, "T": 11473652.42, "R": 0, "P": -79318.26}, {"d": "2025-01-17", "B": 3954512.79, "I": 6730130.0, "BB": 51.1, "BS": 43.2, "S": 808.19, "SF": 0, "T": 10685805.6, "R": 48342.67, "P": -836189.49}, {"d": "2025-01-20", "B": 866104.96, "I": 5095094.97, "BB": 51.1, "BS": 43.2, "S": 808.19, "SF": 0, "T": 5962362.74, "R": 57604.16, "P": -4781047.02}, {"d": "2025-01-21", "B": 898004.28, "I": 5026230.56, "BB": 51.1, "BS": 43.2, "S": 808.19, "SF": 0, "T": 5925397.65, "R": 32301.82, "P": -69266.91}, {"d": "2025-01-22", "B": 724698.87, "I": 5492620.17, "BB": 51.1, "BS": 43.2, "S": 808.19, "SF": 0, "T": 6218481.85, "R": 326694.8, "P": -33610.6}, {"d": "2025-01-23", "B": 1284078.28, "I": 5460298.14, "BB": 51.1, "BS": 43.2, "S": 808.19, "SF": 0, "T": 6745539.23, "R": 559379.41, "P": -32322.03}, {"d": "2025-01-24", "B": 677722.74, "I": 5445591.34, "BB": 118758.56, "BS": 43.2, "S": 808.19, "SF": 0, "T": 6243184.35, "R": 118707.46, "P": -621062.34}, {"d": "2025-01-27", "B": 780969.69, "I": 5272274.08, "BB": 118636.26, "BS": 43.2, "S": 808.19, "SF": 0, "T": 6172991.74, "R": 381210.63, "P": -451403.24}, {"d": "2025-01-28", "B": 779451.05, "I": 5362862.01, "BB": 8626.26, "BS": 43.2, "S": 297.57, "SF": 0, "T": 6151540.41, "R": 0, "P": -21451.33}, {"d": "2025-01-29", "B": 776075.25, "I": 5442890.38, "BB": 4039.03, "BS": 43.2, "S": 217.57, "SF": 0, "T": 6223525.75, "R": 456020.47, "P": -384035.13}, {"d": "2025-01-30", "B": 848825.79, "I": 5442890.38, "BB": 82873.03, "BS": 43.2, "S": 217.57, "SF": 0, "T": 6375110.29, "R": 151584.54, "P": 0}, {"d": "2025-01-31", "B": 204154.12, "I": 6499965.77, "BB": 6541.97, "BS": 43.2, "S": 217.65, "SF": 0, "T": 6711183.08, "R": 1023324.54, "P": -742902.35}, {"d": "2025-02-03", "B": 69767.16, "I": 6310464.07, "BB": 6291.97, "BS": 43.2, "S": 217.65, "SF": 0, "T": 6387044.42, "R": 1331.58, "P": -325470.24}, {"d": "2025-02-04", "B": 35827.07, "I": 2950928.33, "BB": 3657.15, "BS": -0.0, "S": 217.65, "SF": 0, "T": 2990890.57, "R": 0, "P": -3396153.85}, {"d": "2025-02-05", "B": 81496.88, "I": 2449945.99, "BB": 27812.93, "BS": 26.2, "S": 217.65, "SF": 0, "T": 2559760.02, "R": 209885.59, "P": -641016.14}, {"d": "2025-02-06", "B": 127227.23, "I": 2696354.24, "BB": 9763.01, "BS": 26.2, "S": 217.65, "SF": 0, "T": 2833848.7, "R": 332790.03, "P": -58701.35}, {"d": "2025-02-07", "B": 163937.6, "I": 2827208.45, "BB": 7136.4, "BS": 26.2, "S": 217.65, "SF": 0, "T": 2998786.67, "R": 288111.75, "P": -123173.78}, {"d": "2025-02-10", "B": 356066.17, "I": 3567788.04, "BB": 9640.27, "BS": 26.2, "S": 217.65, "SF": 0, "T": 3933768.7, "R": 1206491.13, "P": -271509.1}, {"d": "2025-02-11", "B": 371927.78, "I": 3475462.19, "BB": 109949.38, "BS": 26.2, "S": 217.65, "SF": 0, "T": 3957613.57, "R": 118258.47, "P": -94413.6}, {"d": "2025-02-12", "B": -864.38, "I": 3413713.42, "BB": 8956.29, "BS": 55.45, "S": 217.65, "SF": 0, "T": 3422108.8, "R": 310785.01, "P": -898726.28}, {"d": "2025-02-13", "B": 78075.4, "I": 3258104.43, "BB": 324364.55, "BS": 55.45, "S": 217.65, "SF": 0, "T": 3660847.85, "R": 315408.26, "P": -76669.21}, {"d": "2025-02-14", "B": 74340.77, "I": 3633074.58, "BB": 747.48, "BS": 55.45, "S": 217.65, "SF": 0, "T": 3708466.3, "R": 76392.93, "P": -28774.48}, {"d": "2025-02-17", "B": 90768.86, "I": 3516719.64, "BB": 747.48, "BS": 55.45, "S": 217.65, "SF": 0, "T": 3608539.45, "R": 33708.95, "P": -133635.8}, {"d": "2025-02-18", "B": 88866.36, "I": 297866.62, "BB": 747.48, "BS": 55.45, "S": 217.65, "SF": 0, "T": 387783.93, "R": 0, "P": -3220755.52}, {"d": "2025-02-19", "B": 174332.76, "I": 266325.96, "BB": 747.48, "BS": 55.45, "S": 23642.61, "SF": 0, "T": 465134.63, "R": 108891.36, "P": -31540.66}, {"d": "2025-02-20", "B": -434453.16, "I": 736692.88, "BB": 762201.41, "BS": 55.45, "S": 642.61, "SF": 0, "T": 1352805.14, "R": 1675001.36, "P": -787330.85}, {"d": "2025-02-21", "B": 534221.72, "I": 904776.12, "BB": 8775.71, "BS": 55.45, "S": 632.71, "SF": 0, "T": 1449127.66, "R": 218291.46, "P": -121968.94}, {"d": "2025-02-24", "B": 1657347.18, "I": 755230.94, "BB": 43216.34, "BS": 55.45, "S": 632.71, "SF": 0, "T": 2457148.57, "R": 1157566.09, "P": -149545.18}, {"d": "2025-02-25", "B": 272596.51, "I": 1255519.86, "BB": 4302.07, "BS": 55.45, "S": 632.71, "SF": 0, "T": 1533772.55, "R": 594146.16, "P": -1517522.18}, {"d": "2025-02-26", "B": 475449.24, "I": 1008029.29, "BB": 3006.66, "BS": 55.45, "S": 632.71, "SF": 0, "T": 1487839.3, "R": 561177.42, "P": -607110.67}, {"d": "2025-02-27", "B": 770902.23, "I": 2566029.29, "BB": 7083.62, "BS": 55.45, "S": 811.49, "SF": 0, "T": 3345548.03, "R": 1857718.73, "P": -10}, {"d": "2025-02-28", "B": 1036493.08, "I": 3375899.22, "BB": 85917.62, "BS": 55.45, "S": 801.59, "SF": 0, "T": 4499832.91, "R": 1240007.72, "P": -85722.84}, {"d": "2025-03-03", "B": 1036493.08, "I": 3375899.22, "BB": 85917.62, "BS": 55.45, "S": 801.59, "SF": 0, "T": 4499832.91, "R": 0, "P": 0}, {"d": "2025-03-04", "B": 1036493.08, "I": 3375899.22, "BB": 85917.62, "BS": 55.45, "S": 801.59, "SF": 0, "T": 4499832.91, "R": 0, "P": 0}, {"d": "2025-03-05", "B": 908353.37, "I": 1376299.73, "BB": 2798.93, "BS": 80.04, "S": 155914.91, "SF": 0, "T": 2443846.21, "R": 1518987.12, "P": -3574973.82}, {"d": "2025-03-06", "B": 233816.05, "I": 176642.25, "BB": 568328.51, "BS": 10.04, "S": 905.01, "SF": 0, "T": 980101.09, "R": 768901.18, "P": -2232646.3}, {"d": "2025-03-07", "B": 522177.98, "I": 621937.32, "BB": 3518.51, "BS": 10.04, "S": 895.11, "SF": 0, "T": 1148938.19, "R": 290356.46, "P": -121519.36}, {"d": "2025-03-10", "B": 519691.01, "I": 331194.43, "BB": 518.51, "BS": 10.04, "S": 895.11, "SF": 0, "T": 852708.33, "R": 125707.14, "P": -421937}, {"d": "2025-03-11", "B": 519691.01, "I": 244107.68, "BB": 76911.44, "BS": 10.04, "S": 101314.61, "SF": 0, "T": 942434.01, "R": 182641.28, "P": -92915.6}, {"d": "2025-03-12", "B": 926454.72, "I": 371081.84, "BB": 3852.54, "BS": 10.04, "S": 314.61, "SF": 0, "T": 1302112.98, "R": 418368.91, "P": -58689.94}, {"d": "2025-03-13", "B": 922049.33, "I": 361756.47, "BB": 3289.04, "BS": 10.04, "S": 304.71, "SF": 0, "T": 1287808.82, "R": 31737.35, "P": -46041.51}, {"d": "2025-03-14", "B": 1194217.23, "I": 325817.18, "BB": 3289.04, "BS": 10.04, "S": 304.71, "SF": 0, "T": 1524037.43, "R": 275680.71, "P": -39452.1}, {"d": "2025-03-17", "B": 1298961.85, "I": 169619.33, "BB": 3289.04, "BS": 10.04, "S": 304.71, "SF": 0, "T": 1472584.2, "R": 816659.93, "P": -868113.16}, {"d": "2025-03-18", "B": -1175803.43, "I": 246073.81, "BB": 90046.41, "BS": 10.04, "S": 304.71, "SF": 0, "T": -838969.23, "R": 177004.71, "P": -2488558.14}, {"d": "2025-03-19", "B": -1750255.27, "I": 162378.54, "BB": 8486.99, "BS": 10.04, "S": 304.71, "SF": 0, "T": -1578675.76, "R": 39040.68, "P": -778747.21}, {"d": "2025-03-20", "B": -2135226.69, "I": 695044.28, "BB": 5345.89, "BS": 10.04, "S": 304.71, "SF": 0, "T": -1434152.53, "R": 972527.22, "P": -828003.99}, {"d": "2025-03-21", "B": -1783562.72, "I": 680847.47, "BB": 3278.6, "BS": 10.04, "S": 304.71, "SF": 0, "T": -1098752.66, "R": 350006.09, "P": -14606.22}, {"d": "2025-03-24", "B": -1343562.72, "I": 600641.67, "BB": 3896.17, "BS": 10.04, "S": 304.71, "SF": 0, "T": -738340.89, "R": 456839.6, "P": -96427.83}, {"d": "2025-03-25", "B": -1100388.82, "I": 1299381.33, "BB": 239269.46, "BS": 10.04, "S": 304.71, "SF": 0, "T": 438945.96, "R": 1463287.65, "P": -286000.8}, {"d": "2025-03-26", "B": 400461.13, "I": 2190771.26, "BB": 6007.34, "BS": 10.04, "S": 304.71, "SF": 0, "T": 2597923.72, "R": 2278023.53, "P": -119045.77}, {"d": "2025-03-27", "B": 591398.63, "I": 3023782.91, "BB": 8637.56, "BS": 10.04, "S": 304.71, "SF": 0, "T": 3624503.09, "R": 1359154.32, "P": -332574.95}, {"d": "2025-03-28", "B": 1391082.79, "I": 4627994.43, "BB": 8637.56, "BS": 10.04, "S": 802.19, "SF": 0, "T": 6028896.25, "R": 2404393.16, "P": 0}, {"d": "2025-03-31", "B": 1458894.83, "I": 6534726.65, "BB": 16795.61, "BS": 50.01, "S": 712.41, "SF": 0, "T": 8011548.84, "R": 2053747.06, "P": -71094.47}, {"d": "2025-04-01", "B": 1458794.83, "I": 6468203.28, "BB": 3069.45, "BS": 48.41, "S": 712.41, "SF": 0, "T": 7931025.71, "R": 0, "P": -80523.13}, {"d": "2025-04-02", "B": 1344055.3, "I": 6424311.51, "BB": 2299.11, "BS": -0.0, "S": 712.41, "SF": 0, "T": 7771575.66, "R": 35998.47, "P": -195448.52}, {"d": "2025-04-03", "B": 1332929.97, "I": 3766529.34, "BB": 6344.66, "BS": 30.01, "S": 306.46, "SF": 0, "T": 5106337.77, "R": 535764.98, "P": -3201002.87}, {"d": "2025-04-04", "B": 1315659.45, "I": 3294658.81, "BB": 89078.06, "BS": 53.36, "S": 306.46, "SF": 0, "T": 4825237.56, "R": 237859.04, "P": -518959.25}, {"d": "2025-04-07", "B": 1363822.65, "I": 2286302.16, "BB": 67108.06, "BS": 53.36, "S": 955.14, "SF": 0, "T": 3718722.79, "R": 127411.88, "P": -1233926.65}, {"d": "2025-04-08", "B": 1362705.85, "I": 2508687.13, "BB": 4768.01, "BS": 53.36, "S": 945.24, "SF": 0, "T": 3877641.01, "R": 207669.95, "P": -48751.73}, {"d": "2025-04-09", "B": 1411888.75, "I": 2467747.07, "BB": 3809.01, "BS": 53.36, "S": 945.24, "SF": 0, "T": 3884924.85, "R": 49911.21, "P": -42627.37}, {"d": "2025-04-10", "B": 1711276.49, "I": 2358825.26, "BB": 75243.57, "BS": 53.36, "S": 945.24, "SF": 0, "T": 4146365.34, "R": 828408.17, "P": -566967.68}, {"d": "2025-04-11", "B": 1711276.49, "I": 2162360.07, "BB": 75243.57, "BS": 53.36, "S": 945.24, "SF": 0, "T": 3949900.15, "R": 0, "P": -196465.19}, {"d": "2025-04-14", "B": 2453057.12, "I": 2194880.95, "BB": 5233.57, "BS": 53.36, "S": 945.24, "SF": 0, "T": 4654191.66, "R": 768584.13, "P": -64292.62}, {"d": "2025-04-15", "B": 2624397.05, "I": 2180982.98, "BB": 212513.53, "BS": 53.36, "S": 945.24, "SF": 0, "T": 5018913.58, "R": 478427.85, "P": -113705.93}, {"d": "2025-04-16", "B": 2624397.05, "I": 2607227.08, "BB": 4485.75, "BS": 53.36, "S": 945.24, "SF": 0, "T": 5237129.9, "R": 332748.78, "P": -114532.46}, {"d": "2025-04-17", "B": 360918.66, "I": 2375579.28, "BB": 8847.53, "BS": 53.36, "S": 945.24, "SF": 0, "T": 2746365.49, "R": 1098561.22, "P": -3589325.63}, {"d": "2025-04-18", "B": 360918.66, "I": 2375579.28, "BB": 8847.53, "BS": 53.36, "S": 945.24, "SF": 0, "T": 2746365.49, "R": 0, "P": 0}, {"d": "2025-04-21", "B": 360918.66, "I": 2375579.28, "BB": 8847.53, "BS": 53.36, "S": 945.24, "SF": 0, "T": 2746365.49, "R": 0, "P": 0}, {"d": "2025-04-22", "B": 77291.9, "I": 1797973.96, "BB": 7391.44, "BS": 53.36, "S": 945.24, "SF": 0, "T": 1883677.32, "R": 78927.51, "P": -941615.68}, {"d": "2025-04-23", "B": 210065.63, "I": 1763935.6, "BB": 102144.1, "BS": 53.36, "S": 945.24, "SF": 0, "T": 2077165.35, "R": 276156.81, "P": -82668.78}, {"d": "2025-04-24", "B": 191387.56, "I": 2103823.64, "BB": 8496.01, "BS": 53.36, "S": 945.24, "SF": 0, "T": 2304727.23, "R": 467063.62, "P": -239501.74}, {"d": "2025-04-25", "B": 716416.73, "I": 1823344.11, "BB": 6474.02, "BS": 87.16, "S": 945.24, "SF": 0, "T": 2662641.95, "R": 977973.89, "P": -620059.17}, {"d": "2025-04-28", "B": 1114590.78, "I": 1902596.53, "BB": 9184.2, "BS": 87.16, "S": 945.24, "SF": 0, "T": 3027589.4, "R": 753634.23, "P": -388686.78}, {"d": "2025-04-29", "B": 1213836.88, "I": 3470942.15, "BB": 128931.66, "BS": 87.16, "S": 2005.55, "SF": 0, "T": 4815988.89, "R": 1788399.49, "P": 0}, {"d": "2025-04-30", "B": 1291553.86, "I": 3785773.81, "BB": 5751.79, "BS": 670677.16, "S": 1915.73, "SF": 0, "T": 5755857.96, "R": 3055686.5, "P": -2115817.43}, {"d": "2025-05-01", "B": 1291553.86, "I": 3785773.81, "BB": 5751.79, "BS": 670677.16, "S": 1915.73, "SF": 0, "T": 5755857.96, "R": 0, "P": 0}, {"d": "2025-05-02", "B": 1158225.38, "I": 4439048.22, "BB": 1197963.16, "BS": 77.16, "S": 565.73, "SF": 0, "T": 6796065.26, "R": 1274094.98, "P": -233887.68}, {"d": "2025-05-05", "B": 1182741.22, "I": 1415529.58, "BB": 14998.54, "BS": 7.16, "S": 58397.46, "SF": 0, "T": 2671859.57, "R": 290147.73, "P": -4414353.42}, {"d": "2025-05-06", "B": 1180603.68, "I": 834531.58, "BB": 11798.54, "BS": 7.16, "S": 384.46, "SF": 0, "T": 2027511.03, "R": 0, "P": -644348.54}, {"d": "2025-05-07", "B": 1227584.03, "I": 753249.36, "BB": 10134.74, "BS": 7.16, "S": 374.56, "SF": 0, "T": 1991535.46, "R": 96980.35, "P": -132955.92}, {"d": "2025-05-08", "B": 1228334.83, "I": 1030470.66, "BB": 34323.28, "BS": 7.16, "S": 374.56, "SF": 0, "T": 2293696.1, "R": 326480.27, "P": -24319.63}, {"d": "2025-05-09", "B": 1228334.83, "I": 926577.01, "BB": 23869.94, "BS": 7.16, "S": 374.56, "SF": 0, "T": 2179349.11, "R": 0, "P": -114346.99}, {"d": "2025-05-12", "B": 1222072.24, "I": 643343.11, "BB": 20757.06, "BS": 7.16, "S": 374.56, "SF": 0, "T": 1886739.74, "R": 4017.99, "P": -296627.36}, {"d": "2025-05-13", "B": 1251071.85, "I": 592997.98, "BB": 55197.69, "BS": 7.16, "S": 374.56, "SF": 0, "T": 1899834.85, "R": 80835.08, "P": -67739.97}, {"d": "2025-05-14", "B": 1243340.28, "I": 541310.07, "BB": 150684.53, "BS": 7.16, "S": 374.56, "SF": 0, "T": 1935902.21, "R": 95486.84, "P": -59419.48}, {"d": "2025-05-15", "B": 1567882.9, "I": 429649.12, "BB": 168861.22, "BS": 7.16, "S": 374.56, "SF": 0, "T": 2166960.57, "R": 360586.35, "P": -129527.99}, {"d": "2025-05-16", "B": 1567835.6, "I": 519099.74, "BB": 6401.32, "BS": 7.16, "S": 374.56, "SF": 0, "T": 2093903.99, "R": 47550.1, "P": -120606.68}, {"d": "2025-05-19", "B": -1772050.87, "I": 365688.87, "BB": 4790.42, "BS": 101.45, "S": 374.56, "SF": 0, "T": -1400909.96, "R": 390638.99, "P": -3885452.94}, {"d": "2025-05-20", "B": -2416518.24, "I": 278130.86, "BB": 4342.98, "BS": 101.45, "S": 374.56, "SF": 0, "T": -2133382.78, "R": 142925.1, "P": -875397.92}, {"d": "2025-05-21", "B": -2384216.63, "I": 461589.64, "BB": 4342.98, "BS": 101.45, "S": 374.56, "SF": 0, "T": -1917622.39, "R": 252662.94, "P": -36902.55}, {"d": "2025-05-22", "B": -551886.65, "I": 447443.12, "BB": 2425.32, "BS": 101.45, "S": 374.56, "SF": 0, "T": -101356.59, "R": 1832787.32, "P": -16521.52}, {"d": "2025-05-23", "B": 88018.41, "I": 1139993.97, "BB": 2127.72, "BS": 77.84, "S": 656.79, "SF": 0, "T": 1231060.34, "R": 1483032.93, "P": -150616}, {"d": "2025-05-26", "B": 627412.54, "I": 1009805.44, "BB": 5253.1, "BS": 13614.01, "S": 646.89, "SF": 0, "T": 1656917.59, "R": 984145.1, "P": -558287.85}, {"d": "2025-05-27", "B": 1028432.35, "I": 982110.42, "BB": 2160.09, "BS": 104.01, "S": 519.51, "SF": 0, "T": 2013511.99, "R": 494593.68, "P": -137999.28}, {"d": "2025-05-28", "B": 1333015.94, "I": 767076.82, "BB": 1092.19, "BS": 104.01, "S": 186.81, "SF": 0, "T": 2101661.38, "R": 306762.19, "P": -218612.8}, {"d": "2025-05-29", "B": 1487441.83, "I": 3115747.24, "BB": 5343.74, "BS": 104.01, "S": 845.03, "SF": 0, "T": 4609667.46, "R": 2508106.08, "P": -100}, {"d": "2025-05-30", "B": 1976097.59, "I": 3301356.51, "BB": 1376.05, "BS": 167916.82, "S": 3483.86, "SF": 0, "T": 5450416.46, "R": 917143.47, "P": -76394.47}, {"d": "2025-06-02", "B": 1876505.61, "I": 3426636.74, "BB": 37120.1, "BS": 116.82, "S": 657.71, "SF": 0, "T": 5341222.61, "R": 103599.51, "P": -212793.36}, {"d": "2025-06-03", "B": 1861209.31, "I": 3401430.13, "BB": 37120.1, "BS": 46.82, "S": 647.81, "SF": 0, "T": 5300639.8, "R": 0, "P": -40582.81}, {"d": "2025-06-04", "B": 1381557.93, "I": 556999.23, "BB": 17816.94, "BS": 46.82, "S": 198.74, "SF": 0, "T": 1956805.29, "R": 221965.09, "P": -3565799.6}, {"d": "2025-06-05", "B": 253107.75, "I": 927455.62, "BB": 6501.62, "BS": 46.82, "S": 198.74, "SF": 0, "T": 1188292.45, "R": 713235.85, "P": -1481748.69}, {"d": "2025-06-06", "B": 252627.19, "I": 896016.76, "BB": 3301.62, "BS": 46.82, "S": 198.74, "SF": 0, "T": 1153173.03, "R": 1657.19, "P": -36776.61}, {"d": "2025-06-09", "B": 277068.47, "I": 719272.77, "BB": 3301.62, "BS": 46.82, "S": 198.74, "SF": 0, "T": 1000870.32, "R": 28506.78, "P": -180809.49}, {"d": "2025-06-10", "B": 277025.89, "I": 1112963.22, "BB": 5094.34, "BS": 46.82, "S": 198.74, "SF": 0, "T": 1395770.91, "R": 663953.98, "P": -269053.39}, {"d": "2025-06-11", "B": 328585.02, "I": 1346257.78, "BB": 3540.35, "BS": 99.97, "S": 198.74, "SF": 0, "T": 1679123.76, "R": 480947.53, "P": -197594.68}, {"d": "2025-06-12", "B": 347836.29, "I": 1588317.5, "BB": 300103.49, "BS": 99.97, "S": 198.74, "SF": 0, "T": 2236997.89, "R": 672478.64, "P": -114604.51}, {"d": "2025-06-13", "B": 266922.62, "I": -630216.32, "BB": 5093.49, "BS": 99.97, "S": 198.74, "SF": 0, "T": -357459.6, "R": 294938.06, "P": -2889395.55}, {"d": "2025-06-16", "B": 105007.82, "I": -207373.68, "BB": 53.12, "BS": 99.97, "S": 198.74, "SF": 0, "T": -101572.13, "R": 462015.48, "P": -206128.01}, {"d": "2025-06-17", "B": 90285.47, "I": 708920.02, "BB": 772.59, "BS": 99.97, "S": 198.74, "SF": 0, "T": 800718.69, "R": 950729.47, "P": -48438.65}, {"d": "2025-06-18", "B": -357590.52, "I": 219748.87, "BB": 772.59, "BS": 99.97, "S": 198.74, "SF": 0, "T": -136328.45, "R": 52630.68, "P": -989677.82}, {"d": "2025-06-19", "B": -357590.52, "I": 219748.87, "BB": 772.59, "BS": 99.97, "S": 198.74, "SF": 0, "T": -136328.45, "R": 0, "P": 0}, {"d": "2025-06-20", "B": -997573.81, "I": 79998.01, "BB": 82802.81, "BS": 99.97, "S": 198.74, "SF": 0, "T": -834032.38, "R": 202075.81, "P": -900737.73}, {"d": "2025-06-23", "B": 96000.54, "I": 480461.47, "BB": 8052.33, "BS": 99.97, "S": 198.74, "SF": 0, "T": 585254.95, "R": 1468844.08, "P": -49556.75}, {"d": "2025-06-24", "B": 96000.54, "I": 480461.47, "BB": 8052.33, "BS": 99.97, "S": 110822.55, "SF": 0, "T": 695878.76, "R": 110623.81, "P": 0}, {"d": "2025-06-25", "B": 1527884.92, "I": 2283996.5, "BB": 356413.43, "BS": 69.0, "S": 822.55, "SF": 0, "T": 4169628.3, "R": 3867275.66, "P": -393526.12}, {"d": "2025-06-26", "B": 1856946.54, "I": 2209294.87, "BB": 3103.94, "BS": 69.0, "S": 812.65, "SF": 0, "T": 4070668.9, "R": 331462.5, "P": -430421.9}, {"d": "2025-06-27", "B": 2690693.64, "I": 2077722.04, "BB": 463496.08, "BS": 69.0, "S": 1325379.95, "SF": 0, "T": 6557802.61, "R": 3610807.28, "P": -1123673.57}, {"d": "2025-06-30", "B": 2898601.65, "I": 2857722.04, "BB": 1216.07, "BS": 69.0, "S": 1403030.3, "SF": 0, "T": 7161081.01, "R": 675917.5, "P": -72639.1}, {"d": "2025-07-01", "B": 2890573.4, "I": 2737114.34, "BB": 181153.84, "BS": 69.0, "S": 1403030.3, "SF": 0, "T": 7212382.83, "R": 191509.52, "P": -140207.7}, {"d": "2025-07-02", "B": 2890573.4, "I": 2737114.34, "BB": 723098.67, "BS": 0.6, "S": 1403030.3, "SF": 0, "T": 7754259.26, "R": 541944.83, "P": -68.4}, {"d": "2025-07-03", "B": 3058892.42, "I": 698611.25, "BB": 1136114.72, "BS": 0.6, "S": 1030.3, "SF": 0, "T": 4895091.24, "R": 741789.16, "P": -3600957.18}, {"d": "2025-07-04", "B": 3042097.42, "I": 1997819.93, "BB": 1589.63, "BS": 0.6, "S": 1020.4, "SF": 0, "T": 5042969.93, "R": 698672.87, "P": -550794.18}, {"d": "2025-07-07", "B": 3092853.25, "I": 1453251.57, "BB": 4559.74, "BS": 0.6, "S": 1020.4, "SF": 0, "T": 4552127.51, "R": 748535.94, "P": -1239378.36}, {"d": "2025-07-08", "B": 3167167.69, "I": 1445172.95, "BB": 4559.74, "BS": 0.6, "S": 1020.4, "SF": 0, "T": 4618363.33, "R": 75079.19, "P": -8843.37}, {"d": "2025-07-09", "B": 3166582.85, "I": 1367402.15, "BB": 4559.74, "BS": 0.6, "S": 1020.4, "SF": 0, "T": 4540007.69, "R": 4017.99, "P": -82373.63}, {"d": "2025-07-10", "B": 3166540.27, "I": 1033290.92, "BB": 2666.86, "BS": 0.6, "S": 1020.4, "SF": 0, "T": 4203961.0, "R": 0, "P": -336046.69}, {"d": "2025-07-11", "B": 3136272.86, "I": 892442.06, "BB": 8216.92, "BS": 0.6, "S": 1020.4, "SF": 0, "T": 4038394.79, "R": 5550.06, "P": -171116.27}, {"d": "2025-07-14", "B": 3125195.5, "I": 784547.47, "BB": 5595.21, "BS": 0.6, "S": 1020.4, "SF": 0, "T": 3916801.13, "R": 117388.29, "P": -238981.95}, {"d": "2025-07-15", "B": 3110344.24, "I": 1476289.17, "BB": 4811.51, "BS": 87729.51, "S": 1020.4, "SF": 0, "T": 4680636.78, "R": 932599.51, "P": -168763.86}, {"d": "2025-07-16", "B": 3402275.18, "I": 1651276.24, "BB": 3165.94, "BS": 1163.14, "S": 1020.4, "SF": 0, "T": 5059342.85, "R": 512739.74, "P": -134033.67}, {"d": "2025-07-17", "B": 3709534.98, "I": 735074.27, "BB": 19831.26, "BS": 1163.14, "S": 1020.4, "SF": 0, "T": 4467066.0, "R": 323925.12, "P": -916201.97}, {"d": "2025-07-18", "B": 659938.79, "I": 1644230.73, "BB": 5550.73, "BS": 1163.14, "S": 1020.4, "SF": 0, "T": 2312345.74, "R": 1014143.89, "P": -3168864.15}, {"d": "2025-07-21", "B": 85766.59, "I": 1530283.88, "BB": 11151.11, "BS": 1163.14, "S": 1020.4, "SF": 0, "T": 1629827.07, "R": 255860.38, "P": -938379.05}, {"d": "2025-07-22", "B": 84596.59, "I": 1744911.4, "BB": 6554.79, "BS": 1163.14, "S": 1020.4, "SF": 0, "T": 1838688.27, "R": 285809.68, "P": -76948.48}, {"d": "2025-07-23", "B": 959254.03, "I": 1711823.72, "BB": 78783.23, "BS": 1163.14, "S": 1020.4, "SF": 0, "T": 2752426.47, "R": 957258.67, "P": -43520.47}, {"d": "2025-07-24", "B": 959254.03, "I": 1597187.77, "BB": 78783.23, "BS": 1163.14, "S": 127447.61, "SF": 0, "T": 2764217.73, "R": 126427.21, "P": -114635.95}, {"d": "2025-07-25", "B": 851937.44, "I": 1704598.68, "BB": 127136.97, "BS": 34480.94, "S": 447.61, "SF": 0, "T": 2718983.59, "R": 455725.43, "P": -500959.57}, {"d": "2025-07-28", "B": 2171050.63, "I": 1572009.13, "BB": 3104.43, "BS": 80.94, "S": 437.71, "SF": 0, "T": 3747064.79, "R": 1460690.65, "P": -432609.45}, {"d": "2025-07-29", "B": 2764576.71, "I": 1459505.47, "BB": 2076.58, "BS": 79.34, "S": 86.39, "SF": 0, "T": 4226471.24, "R": 798455.21, "P": -319048.76}, {"d": "2025-07-30", "B": 2937874.44, "I": 1545104.19, "BB": 76362.79, "BS": 309469.68, "S": 1309130.75, "SF": 0, "T": 6178088.6, "R": 1951717.26, "P": -99.9}, {"d": "2025-07-31", "B": 3010667.16, "I": 4275578.66, "BB": 357109.54, "BS": 68.08, "S": 134.11, "SF": 0, "T": 7643704.34, "R": 1538821.27, "P": -73205.53}, {"d": "2025-08-01", "B": 3008896.16, "I": 4993944.3, "BB": 6323.44, "BS": 68.08, "S": 124.21, "SF": 0, "T": 8009502.98, "R": 480383.1, "P": -114584.46}, {"d": "2025-08-04", "B": 2839517.47, "I": 1303265.32, "BB": 40380.49, "BS": -0.0, "S": 124.21, "SF": 0, "T": 4183434.28, "R": 42211.31, "P": -3868280.01}, {"d": "2025-08-05", "B": 2867665.88, "I": 633890.19, "BB": 14588.82, "BS": 99.68, "S": 124.21, "SF": 0, "T": 3516515.57, "R": 31353.41, "P": -698272.12}, {"d": "2025-08-06", "B": 2945309.83, "I": 784752.39, "BB": 9286.0, "BS": 99.68, "S": 124.21, "SF": 0, "T": 3739697.9, "R": 345377.74, "P": -122195.41}, {"d": "2025-08-07", "B": 2944204.12, "I": 303090.19, "BB": 9354.43, "BS": 99.68, "S": 124.21, "SF": 0, "T": 3256998.42, "R": 530114.43, "P": -1012813.91}, {"d": "2025-08-08", "B": 2938330.18, "I": 341395.0, "BB": 9354.43, "BS": 99.68, "S": 124.21, "SF": 0, "T": 3289429.29, "R": 124617.98, "P": -92187.11}, {"d": "2025-08-11", "B": 2703172.55, "I": 57856.53, "BB": 15298.42, "BS": 99.68, "S": 124.21, "SF": 0, "T": 2776677.18, "R": 9096.96, "P": -521849.07}, {"d": "2025-08-12", "B": 2695700.37, "I": 161839.84, "BB": 14694.67, "BS": 99.68, "S": 124.21, "SF": 0, "T": 2872584.56, "R": 111150.11, "P": -15242.73}, {"d": "2025-08-13", "B": 2787381.01, "I": 192057.83, "BB": 2167.42, "BS": 99.68, "S": 34.21, "SF": 0, "T": 2981865.94, "R": 223103.73, "P": -113822.35}, {"d": "2025-08-14", "B": 2668887.99, "I": 465248.36, "BB": 5342.46, "BS": 99.68, "S": 34.21, "SF": 0, "T": 3139738.49, "R": 318185.04, "P": -160312.49}, {"d": "2025-08-15", "B": 2645195.03, "I": 1123948.5, "BB": 13020.42, "BS": 99.68, "S": 34.21, "SF": 0, "T": 3782423.63, "R": 709454.33, "P": -66769.19}, {"d": "2025-08-18", "B": 35657.49, "I": 119091.41, "BB": 1745.27, "BS": 99.68, "S": 34.21, "SF": 0, "T": 156753.85, "R": 483003.77, "P": -4108673.55}, {"d": "2025-08-19", "B": 80705.49, "I": 88122.75, "BB": 1350.07, "BS": 99.68, "S": 34.21, "SF": 0, "T": 170437.99, "R": 45048, "P": -31363.86}, {"d": "2025-08-20", "B": -1635125.26, "I": 72332.11, "BB": 35126.58, "BS": 99.68, "S": 34.21, "SF": 0, "T": -1527406.89, "R": 70811.41, "P": -1768656.29}, {"d": "2025-08-21", "B": -1374834.98, "I": 39956.43, "BB": 35057.88, "BS": 99.68, "S": 34.21, "SF": 0, "T": -1299560.99, "R": 260290.28, "P": -32444.38}, {"d": "2025-08-22", "B": -953961.4, "I": 88073.61, "BB": 916.19, "BS": 99.68, "S": 34.21, "SF": 0, "T": -864711.92, "R": 456742.1, "P": -21893.03}, {"d": "2025-08-25", "B": -552070.87, "I": 8401.46, "BB": 721.09, "BS": 99.68, "S": 28480.33, "SF": 0, "T": -514242.52, "R": 598834.25, "P": -248364.85}, {"d": "2025-08-26", "B": 30833.01, "I": 148830.44, "BB": 715.9, "BS": 99.68, "S": 480.33, "SF": 0, "T": 181085.15, "R": 1189698.86, "P": -494371.19}, {"d": "2025-08-27", "B": 1680319.62, "I": 1663749.89, "BB": 3941.44, "BS": 238.78, "S": 470.43, "SF": 0, "T": 3348845.95, "R": 3421187.93, "P": -253427.13}, {"d": "2025-08-28", "B": 2309088.63, "I": 3118749.89, "BB": 23452.06, "BS": 311508.52, "S": 288.85, "SF": 0, "T": 5763213.74, "R": 2414415.09, "P": -47.3}, {"d": "2025-08-29", "B": 1493645.84, "I": 3431127.15, "BB": 41238.74, "BS": 106.92, "S": 188.96, "SF": 0, "T": 4966433.41, "R": 1277167.62, "P": -2073947.95}, {"d": "2025-09-01", "B": 1542400.97, "I": 3389490.28, "BB": 77169.3, "BS": 131.86, "S": 188.96, "SF": 0, "T": 5009507.17, "R": 170279.3, "P": -127205.54}, {"d": "2025-09-02", "B": 1398015.59, "I": 4368330.08, "BB": 2242.26, "BS": 61.86, "S": 188.96, "SF": 0, "T": 5768964.55, "R": 928276.87, "P": -168819.49}, {"d": "2025-09-03", "B": 1400850.11, "I": 625222.78, "BB": 1575.39, "BS": 61.86, "S": 188.96, "SF": 0, "T": 2028024.9, "R": 151831.18, "P": -3892770.83}, {"d": "2025-09-04", "B": 896456.18, "I": 509224.03, "BB": 377723.24, "BS": 61.86, "S": 188.96, "SF": 0, "T": 1783780.07, "R": 431699.1, "P": -675943.93}, {"d": "2025-09-05", "B": 416985.12, "I": 295523.88, "BB": 7678.89, "BS": 61.86, "S": 188.96, "SF": 0, "T": 720564.51, "R": 20528.94, "P": -1083744.5}, {"d": "2025-09-08", "B": 496661.57, "I": 112767.77, "BB": 5012.89, "BS": 61.86, "S": 188.96, "SF": 0, "T": 614818.85, "R": 85294.65, "P": -191040.31}, {"d": "2025-09-09", "B": 473053.55, "I": 49675.34, "BB": 2566.06, "BS": 61.86, "S": 188.96, "SF": 0, "T": 525671.57, "R": 87563.17, "P": -176710.45}, {"d": "2025-09-10", "B": 233483.69, "I": 380122.08, "BB": 1018.65, "BS": 61.86, "S": 188.96, "SF": 0, "T": 615001.04, "R": 570345.47, "P": -481016}, {"d": "2025-09-11", "B": 233483.69, "I": 345037.18, "BB": 498798.31, "BS": 61.86, "S": 188.96, "SF": 0, "T": 1077695.8, "R": 497789.66, "P": -35094.9}, {"d": "2025-09-12", "B": 205914.19, "I": 341423.84, "BB": 498798.31, "BS": 61.86, "S": 188.96, "SF": 0, "T": 1046512.96, "R": 28662.01, "P": -59844.85}, {"d": "2025-09-15", "B": 217615.79, "I": 622757.96, "BB": 5710.1, "BS": 61.86, "S": 188.96, "SF": 0, "T": 846460.47, "R": 40630.74, "P": -240683.23}, {"d": "2025-09-16", "B": 527340.59, "I": 613945.11, "BB": 5710.1, "BS": 61.86, "S": 188.96, "SF": 0, "T": 1147372.42, "R": 309724.8, "P": -8812.85}, {"d": "2025-09-17", "B": -3272594.2, "I": 57446.72, "BB": 2401.1, "BS": 61.86, "S": 188.96, "SF": 0, "T": -3212369.76, "R": 49527.08, "P": -4409269.26}, {"d": "2025-09-18", "B": -3184690.99, "I": 220022.62, "BB": 505.73, "BS": 61.86, "S": 188.96, "SF": 0, "T": -2963786.02, "R": 316017.84, "P": -67434.1}, {"d": "2025-09-19", "B": -3184691.2, "I": 179302.97, "BB": 297598.64, "BS": 61.86, "S": 188.96, "SF": 0, "T": -2707412.97, "R": 297342.91, "P": -40969.86}, {"d": "2025-09-22", "B": -3567976.36, "I": 1123222.48, "BB": 1580.75, "BS": 61.86, "S": 188.96, "SF": 0, "T": -2442796.51, "R": 1412831.14, "P": -1148214.68}, {"d": "2025-09-23", "B": -3551769.22, "I": 1079614.56, "BB": 126329.82, "BS": 61.86, "S": 188.96, "SF": 0, "T": -2345448.22, "R": 140956.21, "P": -43607.92}, {"d": "2025-09-24", "B": -2965699.93, "I": 1038371.35, "BB": 124124.05, "BS": 61.86, "S": 188.96, "SF": 0, "T": -1802827.91, "R": 596312.08, "P": -53691.77}, {"d": "2025-09-25", "B": -2709861.8, "I": 853912.57, "BB": 138235.47, "BS": 61.86, "S": 188.96, "SF": 0, "T": -1717337.14, "R": 523593.03, "P": -438102.26}, {"d": "2025-09-26", "B": -1882142.61, "I": 525426.76, "BB": 498342.69, "BS": 61.86, "S": 188.96, "SF": 0, "T": -857996.54, "R": 1447180.06, "P": -587839.46}, {"d": "2025-09-29", "B": -711282.31, "I": 5504.61, "BB": 32892.68, "BS": 24302.19, "S": 494.41, "SF": 0, "T": -647962.62, "R": 2210043.92, "P": -2000010}, {"d": "2025-09-30", "B": 60623.6, "I": 245824.41, "BB": 5822.68, "BS": 100.92, "S": 337.83, "SF": 0, "T": 312835.24, "R": 1035277.93, "P": -74480.07}, {"d": "2025-10-01", "B": 844281.22, "I": 62809.71, "BB": 25978.5, "BS": 1288374.53, "S": 237.93, "SF": 0, "T": 2221807.69, "R": 2112110.49, "P": -203138.04}, {"d": "2025-10-02", "B": 807248.37, "I": 1276868.68, "BB": 3342.75, "BS": 2.23, "S": 237.93, "SF": 0, "T": 2087825.76, "R": 19064.69, "P": -153046.62}, {"d": "2025-10-03", "B": -173683.35, "I": 57202.66, "BB": 191.95, "BS": 40.53, "S": 237.93, "SF": 0, "T": -115884.48, "R": 1557644.81, "P": -3761355.05}, {"d": "2025-10-06", "B": -904350.33, "I": 143383.98, "BB": 5443.98, "BS": 40.53, "S": 237.93, "SF": 0, "T": -755118.11, "R": 149955.32, "P": -789188.95}, {"d": "2025-10-07", "B": -921169.1, "I": 140160.57, "BB": 5443.98, "BS": 300043.1, "S": 237.93, "SF": 0, "T": -475157.72, "R": 304771.36, "P": -24810.97}, {"d": "2025-10-08", "B": -846888.87, "I": 344814.46, "BB": 5433.98, "BS": 41.4, "S": 237.93, "SF": 0, "T": -496235.3, "R": 163226.78, "P": -184304.36}, {"d": "2025-10-09", "B": -822400.08, "I": 308053.8, "BB": 5433.98, "BS": 41.4, "S": 237.93, "SF": 0, "T": -508507.17, "R": 24488.79, "P": -36760.66}, {"d": "2025-10-10", "B": -822448.28, "I": 636003.6, "BB": 6560.0, "BS": 41.4, "S": 237.93, "SF": 0, "T": -179479.55, "R": 793028.9, "P": -464001.28}, {"d": "2025-10-13", "B": -828337.52, "I": 746266.32, "BB": 6730.69, "BS": 41.4, "S": 237.93, "SF": 0, "T": -74935.38, "R": 220180.69, "P": -115636.52}, {"d": "2025-10-14", "B": 5975.93, "I": -196852.52, "BB": 6730.69, "BS": 41.4, "S": 237.93, "SF": 0, "T": -183740.77, "R": 0, "P": -108805.39}, {"d": "2025-10-15", "B": 5738.25, "I": -244161.94, "BB": 6730.69, "BS": 41.4, "S": 237.93, "SF": 0, "T": -231287.87, "R": 90096, "P": -137643.1}, {"d": "2025-10-16", "B": 5738.25, "I": -234442.68, "BB": 6730.69, "BS": 41.4, "S": 237.93, "SF": 0, "T": -221568.61, "R": 32264.26, "P": -22545}, {"d": "2025-10-17", "B": 10743.5, "I": -973391.03, "BB": 6730.69, "BS": 41.4, "S": 237.93, "SF": 0, "T": -955511.71, "R": 297066.72, "P": -1031009.82}, {"d": "2025-10-20", "B": 7376.27, "I": -3544841.36, "BB": 218046.38, "BS": 41.4, "S": 237.93, "SF": 0, "T": -3319013.58, "R": 240416.7, "P": -2603918.57}, {"d": "2025-10-21", "B": 324860.67, "I": -2931255.08, "BB": 3189.45, "BS": 2629.2, "S": 237.93, "SF": 0, "T": -2600212.03, "R": 734423.83, "P": -15622.28}, {"d": "2025-10-22", "B": 1140793.52, "I": -2955959.64, "BB": 86449.67, "BS": 2629.2, "S": 237.93, "SF": 0, "T": -1725723.52, "R": 899555.32, "P": -25066.81}, {"d": "2025-10-23", "B": 1191742.81, "I": -2967680.43, "BB": 410869.39, "BS": 127.5, "S": 237.93, "SF": 0, "T": -1364577.0, "R": 457879.01, "P": -96732.49}, {"d": "2025-10-24", "B": 1741.7, "I": -950686.43, "BB": 931.39, "BS": 127.5, "S": 237.93, "SF": 0, "T": -947522.11, "R": 493072, "P": -76017.11}, {"d": "2025-10-27", "B": 1864269.77, "I": -461154.73, "BB": 3003.91, "BS": 61.3, "S": 1061.8, "SF": 0, "T": 1407367.85, "R": 2521962.14, "P": -167072.18}, {"d": "2025-10-28", "B": 41335.21, "I": 2673721.26, "BB": 2997.03, "BS": 61.3, "S": 1051.9, "SF": 0, "T": 2719292.5, "R": 1367290.97, "P": -55366.32}, {"d": "2025-10-29", "B": 509372.84, "I": 1803227.15, "BB": 269.56, "BS": 61.3, "S": 961.9, "SF": 0, "T": 2314018.55, "R": 498075.02, "P": -903348.97}, {"d": "2025-10-30", "B": 272803.41, "I": 2311007.8, "BB": 309403.91, "BS": 61.3, "S": 19.04, "SF": 0, "T": 2893421.26, "R": 2580188.52, "P": -2000785.81}, {"d": "2025-10-31", "B": 234316.8, "I": 3954213.93, "BB": 5123.38, "BS": 61.3, "S": 192.92, "SF": 0, "T": 4194034.15, "R": 1372828.32, "P": -72215.43}, {"d": "2025-11-03", "B": 292917.09, "I": 3893913.36, "BB": 1714.21, "BS": 61.3, "S": 183.02, "SF": 0, "T": 4188914.8, "R": 106576.12, "P": -111695.47}, {"d": "2025-11-04", "B": 245292.59, "I": 104454.13, "BB": 1027.88, "BS": -0.0, "S": 183.02, "SF": 0, "T": 351083.44, "R": 0, "P": -3837831.36}, {"d": "2025-11-05", "B": -1285182.55, "I": 531845.4, "BB": 1740.0, "BS": 66.51, "S": 183.02, "SF": 0, "T": -751221.8, "R": 879112.49, "P": -1981417.73}, {"d": "2025-11-06", "B": -1206048.4, "I": 914078.27, "BB": 3515.46, "BS": 66.51, "S": 183.02, "SF": 0, "T": -288079.32, "R": 523480.3, "P": -60337.82}, {"d": "2025-11-07", "B": -1205039.18, "I": 80201.9, "BB": 3254.53, "BS": 66.51, "S": 183.02, "SF": 0, "T": -1121207.4, "R": 129776.49, "P": -962904.57}, {"d": "2025-11-10", "B": -1398835.29, "I": 45699.32, "BB": 537.87, "BS": 66.51, "S": 183.02, "SF": 0, "T": -1352348.07, "R": 230955.63, "P": -462096.3}, {"d": "2025-11-11", "B": -1412508.13, "I": 540346.57, "BB": 537.87, "BS": 66.51, "S": 183.02, "SF": 0, "T": -871373.66, "R": 527927.78, "P": -46953.37}, {"d": "2025-11-12", "B": -1373216.22, "I": 453018.82, "BB": 537.87, "BS": 66.51, "S": 183.02, "SF": 0, "T": -919409.5, "R": 45048, "P": -93083.84}, {"d": "2025-11-13", "B": -1355132.78, "I": 439912.3, "BB": 537.87, "BS": 66.51, "S": 183.02, "SF": 0, "T": -914432.58, "R": 39665.77, "P": -34688.85}, {"d": "2025-11-14", "B": -1367923.12, "I": 278216.16, "BB": 537.87, "BS": 66.51, "S": 183.02, "SF": 0, "T": -1088919.06, "R": 139379.59, "P": -313866.07}, {"d": "2025-11-17", "B": -1090724.95, "I": 108236.93, "BB": 537.87, "BS": 66.51, "S": 183.02, "SF": 0, "T": -981700.12, "R": 297977.87, "P": -190758.93}, {"d": "2025-11-18", "B": -1681829.71, "I": 31417.33, "BB": 968.5, "BS": 66.51, "S": 183.02, "SF": 0, "T": -1649193.85, "R": 443335.87, "P": -1110829.6}, {"d": "2025-11-19", "B": -3402869.58, "I": 205310.32, "BB": 488.5, "BS": 66.51, "S": 183.02, "SF": 0, "T": -3196820.73, "R": 151893.11, "P": -1699519.99}, {"d": "2025-11-20", "B": -3402869.58, "I": 205310.32, "BB": 488.5, "BS": 66.51, "S": 183.02, "SF": 0, "T": -3196820.73, "R": 0, "P": 0}, {"d": "2025-11-21", "B": -2861089.58, "I": 135939.98, "BB": 488.5, "BS": 66.51, "S": 303.43, "SF": 0, "T": -2724290.66, "R": 1397941.77, "P": -925411.7}, {"d": "2025-11-24", "B": -2549458.47, "I": 38433.42, "BB": 238.5, "BS": 66.51, "S": 293.53, "SF": 0, "T": -2510426.01, "R": 320536.32, "P": -106671.67}, {"d": "2025-11-25", "B": -2702235.37, "I": 54377.04, "BB": 149.3, "BS": 14.81, "S": 293.53, "SF": 0, "T": -2647400.19, "R": 429586.52, "P": -566560.7}, {"d": "2025-11-26", "B": -2498199.7, "I": 904696.12, "BB": 14444.24, "BS": 182.26, "S": 293.53, "SF": 0, "T": -1578583.05, "R": 1883719.93, "P": -814902.79}, {"d": "2025-11-27", "B": -1920297.14, "I": 26124.02, "BB": 1112.26, "BS": 116.56, "S": 293.53, "SF": 0, "T": -1892650.27, "R": 1532273.54, "P": -1846340.76}, {"d": "2025-11-28", "B": -2378287.15, "I": 42292.13, "BB": 395.51, "BS": 98.32, "S": 918177.98, "SF": 0, "T": -1417322.71, "R": 2571940.14, "P": -2096612.58}, {"d": "2025-12-01", "B": 387128.56, "I": 29620.61, "BB": 622.92, "BS": 98.32, "S": 569.09, "SF": 0, "T": 418040.0, "R": 1983187.08, "P": -147824.37}, {"d": "2025-12-02", "B": 507175.7, "I": 432647.16, "BB": 3159.78, "BS": 27.72, "S": 994.49, "SF": 0, "T": 944005.35, "R": 672774.73, "P": -146809.38}, {"d": "2025-12-03", "B": -1624893.38, "I": 77970.54, "BB": 1403.61, "BS": 27.72, "S": 522.53, "SF": 0, "T": -1544968.48, "R": 1508576.24, "P": -3997550.07}, {"d": "2025-12-04", "B": 313396.35, "I": 771169.25, "BB": 2770659.72, "BS": 93.69, "S": 116279.15, "SF": 0, "T": 3971598.66, "R": 6097163.93, "P": -580596.79}, {"d": "2025-12-05", "B": 382722.96, "I": 2047689.18, "BB": 647.4, "BS": 93.69, "S": 279.15, "SF": 0, "T": 2431432.88, "R": 646255.37, "P": -2186421.15}, {"d": "2025-12-08", "B": 382722.96, "I": 2047689.18, "BB": 113975.18, "BS": 93.69, "S": 269.25, "SF": 0, "T": 2544750.76, "R": 113327.78, "P": -9.9}, {"d": "2025-12-09", "B": 634457.97, "I": 1522586.43, "BB": 765.18, "BS": 93.69, "S": 269.25, "SF": 0, "T": 2158173.02, "R": 770418.64, "P": -1156996.38}, {"d": "2025-12-10", "B": 632518.77, "I": 1002611.3, "BB": 765.18, "BS": 22955.55, "S": 269.25, "SF": 0, "T": 1659120.55, "R": 23620.86, "P": -522673.33}, {"d": "2025-12-11", "B": 614395.58, "I": 927897.27, "BB": 765.18, "BS": 45.55, "S": 269.25, "SF": 0, "T": 1543372.83, "R": 1995.13, "P": -117742.85}, {"d": "2025-12-12", "B": 656712.44, "I": 833900.78, "BB": 765.18, "BS": 45.55, "S": 269.25, "SF": 0, "T": 1491693.2, "R": 69429.12, "P": -121108.75}, {"d": "2025-12-15", "B": 698994.93, "I": 2094106.99, "BB": 2355.18, "BS": 91.38, "S": 269.25, "SF": 0, "T": 2795817.73, "R": 1427883.9, "P": -123759.37}, {"d": "2025-12-16", "B": 1192379.95, "I": 2658911.16, "BB": 1225.05, "BS": 91.38, "S": 269.25, "SF": 0, "T": 3852876.79, "R": 1075884.49, "P": -18825.43}, {"d": "2025-12-17", "B": 1363761.87, "I": 1350278.87, "BB": 1225.05, "BS": 91.38, "S": 269.25, "SF": 0, "T": 2715626.42, "R": 176862.24, "P": -1314112.61}, {"d": "2025-12-18", "B": 1610988.03, "I": 1777796.0, "BB": 1311892.01, "BS": 113.17, "S": 269.25, "SF": 0, "T": 4701058.46, "R": 4033278.45, "P": -2047846.41}, {"d": "2025-12-19", "B": 2757314.39, "I": 4640403.54, "BB": 136.25, "BS": 64.55, "S": 269.25, "SF": 13281.56, "T": 7411469.54, "R": 3405546.12, "P": -695135.04}, {"d": "2025-12-22", "B": 2623111.09, "I": 8476679.59, "BB": 4385.06, "BS": 64.55, "S": 131.04, "SF": 13281.56, "T": 11117652.89, "R": 4772128.41, "P": -1065945.06}, {"d": "2025-12-23", "B": 2885034.4, "I": 8888882.87, "BB": 520.67, "BS": 64.55, "S": 121.14, "SF": 13281.56, "T": 11787905.19, "R": 733289.53, "P": -63037.23}, {"d": "2025-12-24", "B": 3419757.8, "I": 12831586.62, "BB": 266.94, "BS": 64.55, "S": 121.14, "SF": 13281.56, "T": 16265078.61, "R": 4726850.28, "P": -249676.86}, {"d": "2025-12-25", "B": 3419757.8, "I": 12831586.62, "BB": 266.94, "BS": 64.55, "S": 121.14, "SF": 13281.56, "T": 16265078.61, "R": 0, "P": 0}, {"d": "2025-12-26", "B": 4351676.06, "I": 12875474.8, "BB": 117.74, "BS": 64.55, "S": 964.34, "SF": 13281.56, "T": 17241579.05, "R": 1975062.77, "P": -998562.33}, {"d": "2025-12-29", "B": 4677157.59, "I": 12794768.97, "BB": 117.74, "BS": 35502.01, "S": 954.44, "SF": 281.56, "T": 17508782.31, "R": 360918.99, "P": -93715.73}, {"d": "2025-12-30", "B": 4982294.65, "I": 12993295.45, "BB": 40661.59, "BS": 126.84, "S": 954.44, "SF": 281.56, "T": 18017614.53, "R": 532046.9, "P": -23214.68}, {"d": "2025-12-31", "B": 4982740.82, "I": 12993532.96, "BB": 153749.09, "BS": 126.84, "S": 864.5, "SF": 281.56, "T": 18131295.77, "R": 113771.18, "P": -89.94}, {"d": "2026-01-01", "B": 4982740.82, "I": 12993532.96, "BB": 153749.09, "BS": 126.84, "S": 864.5, "SF": 281.56, "T": 18131295.77, "R": 0, "P": 0}, {"d": "2026-01-02", "B": 4981067.16, "I": 12874091.51, "BB": 153749.09, "BS": 126.84, "S": 864.5, "SF": 281.56, "T": 18010180.66, "R": 0, "P": -121115.11}, {"d": "2026-01-05", "B": 4962021.35, "I": 7475191.64, "BB": 366.61, "BS": 56.24, "S": 385.54, "SF": 281.56, "T": 12438302.94, "R": 0, "P": -5571877.72}, {"d": "2026-01-06", "B": 5102078.6, "I": 7282430.37, "BB": 366.61, "BS": 56.24, "S": 385.54, "SF": 281.56, "T": 12385598.92, "R": 151589.7, "P": -204293.72}, {"d": "2026-01-07", "B": 5150611.92, "I": 7039947.48, "BB": 366.61, "BS": 56.24, "S": 385.54, "SF": 281.56, "T": 12191649.35, "R": 48758.82, "P": -242708.39}, {"d": "2026-01-08", "B": 5150611.92, "I": 7003073.12, "BB": 376.84, "BS": 56.24, "S": 385.54, "SF": 281.56, "T": 12154785.22, "R": 670.23, "P": -37534.36}, {"d": "2026-01-09", "B": 5148767.05, "I": 6760949.93, "BB": 376.84, "BS": 56.24, "S": 385.54, "SF": 281.56, "T": 11910817.16, "R": 8652.31, "P": -252620.37}, {"d": "2026-01-12", "B": 5158695.63, "I": 6270719.6, "BB": 376.84, "BS": 56.24, "S": 385.54, "SF": 281.56, "T": 11430515.41, "R": 15711.62, "P": -496013.37}, {"d": "2026-01-13", "B": 5116127.76, "I": 6267424.2, "BB": 376.84, "BS": 56.24, "S": 385.54, "SF": 281.56, "T": 11384652.14, "R": 0, "P": -45863.27}, {"d": "2026-01-14", "B": 5099364.37, "I": 6722115.09, "BB": 376.84, "BS": 56.24, "S": 13666.04, "SF": 281.56, "T": 11835860.14, "R": 541597.78, "P": -90389.78}, {"d": "2026-01-15", "B": 4988180.43, "I": 6679127.6, "BB": 40551.43, "BS": 56.24, "S": 666.04, "SF": 281.56, "T": 11708863.3, "R": 42014, "P": -169010.84}, {"d": "2026-01-16", "B": 5516125.14, "I": 6584580.62, "BB": 40551.43, "BS": 56.24, "S": 656.14, "SF": 281.56, "T": 12142251.13, "R": 661424.01, "P": -228036.18}, {"d": "2026-01-19", "B": 5683358.36, "I": 5616863.12, "BB": 5848.93, "BS": 56.24, "S": 656.14, "SF": 281.56, "T": 11307064.35, "R": 230187.9, "P": -1065374.68}, {"d": "2026-01-20", "B": 1358450.76, "I": 5691501.55, "BB": 5848.93, "BS": 56.24, "S": 656.14, "SF": 281.56, "T": 7056795.18, "R": 331889.37, "P": -4582158.54}, {"d": "2026-01-21", "B": 1505942.16, "I": 5571963.33, "BB": 5848.93, "BS": 56.24, "S": 656.14, "SF": 281.56, "T": 7084748.36, "R": 194222.28, "P": -166269.1}, {"d": "2026-01-22", "B": 1569053.91, "I": 5571963.33, "BB": 5094.03, "BS": 56.24, "S": 656.14, "SF": 281.56, "T": 7147105.21, "R": 115356.22, "P": -52999.37}, {"d": "2026-01-23", "B": 1011317.57, "I": 5540653.05, "BB": 1214.14, "BS": 102.59, "S": 656.14, "SF": 281.56, "T": 6554225.05, "R": 148735.55, "P": -741615.71}, {"d": "2026-01-26", "B": 1634449.18, "I": 5540653.05, "BB": 1074.94, "BS": 102.59, "S": 197.76, "SF": 281.56, "T": 7176759.08, "R": 859448.83, "P": -236914.8}, {"d": "2026-01-27", "B": 1529391.01, "I": 5455463.07, "BB": 1074.94, "BS": 10574.19, "S": 187.86, "SF": 281.56, "T": 6996972.63, "R": 23066.17, "P": -202852.62}, {"d": "2026-01-28", "B": 2018726.75, "I": 5228907.2, "BB": 658.47, "BS": 72.49, "S": 187.86, "SF": 281.56, "T": 7248834.33, "R": 996312.42, "P": -744450.72}, {"d": "2026-01-29", "B": 7499355.93, "I": 223907.2, "BB": 658.47, "BS": 72.49, "S": 88.86, "SF": 281.56, "T": 7724364.51, "R": 518370.42, "P": -42840.24}, {"d": "2026-01-30", "B": 3969049.28, "I": 508844.45, "BB": 658.47, "BS": 72.49, "S": 36843.89, "SF": 281.56, "T": 4515750.14, "R": 519106.98, "P": -3727721.35}, {"d": "2026-02-02", "B": 3929471.77, "I": 507272.96, "BB": 4965.97, "BS": 72.49, "S": 36843.89, "SF": 281.56, "T": 4478908.64, "R": 98647.78, "P": -135489.28}, {"d": "2026-02-03", "B": 4243114.68, "I": 505299.07, "BB": 1762.54, "BS": 1.89, "S": 36843.89, "SF": 281.56, "T": 4787303.63, "R": 333311.2, "P": -24916.21}, {"d": "2026-02-04", "B": 326473.66, "I": 43687.64, "BB": 1624.65, "BS": 1.89, "S": 36843.89, "SF": 281.56, "T": 408913.29, "R": 389616.27, "P": -4768006.61}, {"d": "2026-02-05", "B": 47624.94, "I": 109765.82, "BB": 366.5, "BS": 1.89, "S": 36843.89, "SF": 281.56, "T": 194884.6, "R": 1114249.05, "P": -1328277.74}, {"d": "2026-02-06", "B": 4129.07, "I": 27354.44, "BB": 366.5, "BS": 1.89, "S": 75667.76, "SF": 281.56, "T": 107801.22, "R": 108538.73, "P": -195622.11}, {"d": "2026-02-09", "B": 132140.78, "I": 26748.75, "BB": 186.14, "BS": 1.89, "S": 75667.76, "SF": 281.56, "T": 235026.88, "R": 209168.21, "P": -81942.55}, {"d": "2026-02-10", "B": 236595.15, "I": 41221.89, "BB": 1059.02, "BS": 1.89, "S": 75667.76, "SF": 281.56, "T": 354827.27, "R": 338633.68, "P": -218833.29}, {"d": "2026-02-11", "B": 290774.74, "I": 6988.7, "BB": 652.02, "BS": 1.89, "S": 75667.76, "SF": 281.56, "T": 374366.67, "R": 79845.38, "P": -60305.98}, {"d": "2026-02-12", "B": 247322.7, "I": 192788.43, "BB": 252.02, "BS": 1.89, "S": 75667.76, "SF": 281.56, "T": 516314.36, "R": 290754.74, "P": -148807.05}, {"d": "2026-02-13", "B": 570056.38, "I": 158194.02, "BB": 977.37, "BS": 1.89, "S": 75667.76, "SF": 281.56, "T": 805178.98, "R": 431765.96, "P": -142901.34}, {"d": "2026-02-16", "B": 570056.38, "I": 158194.02, "BB": 977.37, "BS": 1.89, "S": 75667.76, "SF": 281.56, "T": 805178.98, "R": 0, "P": 0}, {"d": "2026-02-17", "B": 570056.38, "I": 158194.02, "BB": 977.37, "BS": 1.89, "S": 75667.76, "SF": 281.56, "T": 805178.98, "R": 0, "P": 0}, {"d": "2026-02-18", "B": 736310.73, "I": 78596.48, "BB": 516802.23, "BS": 1.89, "S": 75667.76, "SF": 281.56, "T": 1407660.65, "R": 833978.5, "P": -231496.83}, {"d": "2026-02-19", "B": -2611308.44, "I": 34672.56, "BB": 792.23, "BS": 1.89, "S": 75667.76, "SF": 281.56, "T": -2499892.44, "R": 210932.39, "P": -4118485.48}, {"d": "2026-02-20", "B": -3160763.31, "I": 190969.15, "BB": 502.23, "BS": 55.36, "S": 83020.05, "SF": 281.56, "T": -2885934.96, "R": 796461.42, "P": -1182503.94}, {"d": "2026-02-23", "B": -3014579.28, "I": 188645.26, "BB": 115633.83, "BS": 55.36, "S": 83020.05, "SF": 281.56, "T": -2626943.22, "R": 319727.51, "P": -60735.77}, {"d": "2026-02-24", "B": -2501648.22, "I": 186530.08, "BB": 322.57, "BS": 55.36, "S": 104730.93, "SF": 281.56, "T": -2209727.72, "R": 504893.99, "P": -87678.49}, {"d": "2026-02-25", "B": -3108654.45, "I": 23180.8, "BB": 2111.2, "BS": 55.36, "S": 104730.93, "SF": 281.56, "T": -2978294.6, "R": 135282.23, "P": -903849.11}, {"d": "2026-02-26", "B": -2725754.65, "I": 23180.8, "BB": 2111.2, "BS": 55.36, "S": 2034745.85, "SF": 281.56, "T": -665379.88, "R": 2312915.77, "P": -1.05}, {"d": "2026-02-27", "B": -322760.16, "I": 65274.62, "BB": 639.74, "BS": 55.0, "S": 2073569.72, "SF": 281.56, "T": 1817060.48, "R": 2505319.08, "P": -22878.72}, {"d": "2026-03-02", "B": -295554.64, "I": 36784.2, "BB": 40516.61, "BS": 55.0, "S": 2106983.32, "SF": 281.56, "T": 1889066.05, "R": 176573.38, "P": -104567.81}, {"d": "2026-03-03", "B": 2371453.36, "I": 9982.97, "BB": 486.44, "BS": -0.0, "S": 884.32, "SF": 281.56, "T": 2383088.65, "R": 579850.31, "P": -85827.71}, {"d": "2026-03-04", "B": -2986906.76, "I": 122494.18, "BB": 386.44, "BS": 84.4, "S": 854.62, "SF": 281.56, "T": -2862805.56, "R": 0, "P": -5245894.21}, {"d": "2026-03-05", "B": -4206836.17, "I": 94155.94, "BB": 1330695.14, "BS": 84.4, "S": 854.62, "SF": 281.56, "T": -2780764.51, "R": 1387142.59, "P": -1305101.54}, {"d": "2026-03-06", "B": -2166551.36, "I": 54371.11, "BB": 347.7, "BS": 84.4, "S": 854.62, "SF": 281.56, "T": -2110611.97, "R": 793108.22, "P": -122955.68}, {"d": "2026-03-09", "B": -1839295.96, "I": 53958.12, "BB": 1592.96, "BS": 84.4, "S": 854.62, "SF": 281.56, "T": -1782524.3, "R": 412080.43, "P": -83992.76}, {"d": "2026-03-10", "B": -1962194.36, "I": 44084.41, "BB": 1592.96, "BS": 84.4, "S": 854.62, "SF": 281.56, "T": -1915296.41, "R": 99293.3, "P": -232065.41}, {"d": "2026-03-11", "B": -2071969.99, "I": 15014.59, "BB": 1592.96, "BS": 84.4, "S": 854.62, "SF": 281.56, "T": -2054141.86, "R": 55394.55, "P": -194240}, {"d": "2026-03-12", "B": -1793372.61, "I": 37941.86, "BB": 881.06, "BS": 84.4, "S": 854.62, "SF": 281.56, "T": -1753329.11, "R": 349057.54, "P": -48244.79}, {"d": "2026-03-13", "B": -1240513.71, "I": 13620.67, "BB": 390.0, "BS": 84.4, "S": 854.62, "SF": 281.56, "T": -1225282.46, "R": 659590.64, "P": -131543.99}, {"d": "2026-03-16", "B": -1303824.63, "I": 17382.9, "BB": 390.0, "BS": 84.4, "S": 854.62, "SF": 281.56, "T": -1284831.15, "R": 114943.7, "P": -174492.39}, {"d": "2026-03-17", "B": -846677.73, "I": 16277.21, "BB": 765.72, "BS": 84.4, "S": 854.62, "SF": 281.56, "T": -828414.22, "R": 713705.9, "P": -257288.97}, {"d": "2026-03-18", "B": -1720769.01, "I": 11897.08, "BB": 1047.96, "BS": 84.4, "S": 854.62, "SF": 281.56, "T": -1706603.39, "R": 151292.24, "P": -1029481.41}, {"d": "2026-03-19", "B": -3737389.51, "I": 578430.81, "BB": 1054.77, "BS": 84.4, "S": 1830.32, "SF": 281.56, "T": -3155707.65, "R": 1799756.04, "P": -3248860.3}, {"d": "2026-03-20", "B": -4287267.39, "I": 33776.0, "BB": 574.77, "BS": 84.4, "S": 1830.18, "SF": 281.56, "T": -4250720.48, "R": 111993.45, "P": -1207006.28}, {"d": "2026-03-23", "B": -4287786.39, "I": 11459.47, "BB": 574.77, "BS": 84.4, "S": 1830.18, "SF": 281.56, "T": -4273556.01, "R": 0, "P": -22835.53}, {"d": "2026-03-24", "B": -3634234.81, "I": 270741.47, "BB": 1005.69, "BS": 84.4, "S": 1017.97, "SF": 281.56, "T": -3361103.72, "R": 913180.5, "P": -728.21}, {"d": "2026-03-25", "B": -1809759.96, "I": 146326.72, "BB": 584.97, "BS": 84.4, "S": 1008.07, "SF": 281.56, "T": -1661474.24, "R": 1974228.2, "P": -274598.72}, {"d": "2026-03-26", "B": -1900956.45, "I": 380374.6, "BB": 733.64, "BS": 84.4, "S": 1008.07, "SF": 281.56, "T": -1518474.18, "R": 629579.82, "P": -486579.76}, {"d": "2026-03-27", "B": 128949.15, "I": 89858.1, "BB": 2311.52, "BS": 84.4, "S": 858.07, "SF": 281.56, "T": 222342.8, "R": 2033162.28, "P": -292345.3}, {"d": "2026-03-30", "B": 491731.23, "I": 2007978.04, "BB": 740.06, "BS": 84.4, "S": 227318.37, "SF": 281.56, "T": 2728133.66, "R": 2505850.06, "P": -59.2}, {"d": "2026-03-31", "B": 725506.65, "I": 3772979.8, "BB": 688.19, "BS": 879.44, "S": 240.82, "SF": 282.04, "T": 4500576.94, "R": 1795592.22, "P": -23148.94}, {"d": "2026-04-01", "B": 754768.95, "I": 3931736.36, "BB": 254.23, "BS": 14557.14, "S": 221.02, "SF": 282.04, "T": 4701819.74, "R": 550784.22, "P": -349541.42}, {"d": "2026-04-02", "B": -7781.5, "I": -296626.16, "BB": 283.38, "BS": -0.0, "S": 305.31, "SF": 282.04, "T": -303536.93, "R": 81623.44, "P": -5086980.11}, {"d": "2026-04-03", "B": -7781.5, "I": -296626.16, "BB": 283.38, "BS": -0.0, "S": 305.31, "SF": 282.04, "T": -303536.93, "R": 0, "P": 0}, {"d": "2026-04-06", "B": -1001645.39, "I": 588292.47, "BB": 477.5, "BS": 84.84, "S": 295.41, "SF": 282.04, "T": -412213.13, "R": 1527768.39, "P": -1636444.59}, {"d": "2026-04-07", "B": 7643.04, "I": -456442.69, "BB": 477.5, "BS": 84.84, "S": 295.41, "SF": 282.04, "T": -447659.86, "R": 15500, "P": -50946.73}, {"d": "2026-04-08", "B": 7642.83, "I": -510592.33, "BB": 166.54, "BS": 84.84, "S": 295.41, "SF": 282.04, "T": -502120.67, "R": 233797.11, "P": -288257.92}, {"d": "2026-04-09", "B": 7429.75, "I": -668176.18, "BB": 166.54, "BS": 84.84, "S": 295.41, "SF": 282.04, "T": -659917.6, "R": 410.07, "P": -158207}, {"d": "2026-04-10", "B": 22055.96, "I": -1163877.73, "BB": 166.54, "BS": 84.84, "S": 295.41, "SF": 282.04, "T": -1140992.94, "R": 0, "P": -481075.34}, {"d": "2026-04-13", "B": 47273.54, "I": -1133166.23, "BB": 435.28, "BS": 84.84, "S": 295.41, "SF": 282.04, "T": -1084795.12, "R": 253842.98, "P": -197645.16}, {"d": "2026-04-14", "B": 92321.54, "I": -1186971.47, "BB": 435.28, "BS": 84.84, "S": 18517.04, "SF": 282.04, "T": -1075330.73, "R": 63269.63, "P": -53805.24}, {"d": "2026-04-15", "B": 99099.34, "I": 1257275.82, "BB": 358.44, "BS": 84.84, "S": 517.04, "SF": 282.04, "T": 1357617.52, "R": 2710600.79, "P": -277652.54}, {"d": "2026-04-16", "B": 148860.5, "I": 1559032.91, "BB": 1006.42, "BS": 84.84, "S": 507.14, "SF": 282.04, "T": 1709773.85, "R": 1423463.63, "P": -1071307.3}, {"d": "2026-04-17", "B": 148860.5, "I": 1423498.0, "BB": 1006.42, "BS": 84.84, "S": 507.14, "SF": 282.04, "T": 1574238.94, "R": 0, "P": -135534.91}, {"d": "2026-04-20", "B": 8168.2, "I": -2939753.3, "BB": 526.42, "BS": 84.84, "S": 507.14, "SF": 282.04, "T": -2930184.66, "R": 25384.55, "P": -4529808.15}, {"d": "2026-04-21", "B": 8168.2, "I": -2939753.3, "BB": 526.42, "BS": 84.84, "S": 507.14, "SF": 282.04, "T": -2930184.66, "R": 0, "P": 0}, {"d": "2026-04-22", "B": 42740.95, "I": -2921887.05, "BB": 526.42, "BS": 84.84, "S": 507.14, "SF": 282.04, "T": -2877745.66, "R": 194572.75, "P": -142133.75}, {"d": "2026-04-23", "B": 399220.89, "I": -2932134.83, "BB": 526.42, "BS": 84.84, "S": 507.14, "SF": 282.04, "T": -2531513.5, "R": 356479.94, "P": -10247.78}, {"d": "2026-04-24", "B": 440893.59, "I": -2821182.3, "BB": 203347.68, "BS": 84.84, "S": 507.14, "SF": 282.04, "T": -2176067.01, "R": 520413.87, "P": -164967.38}, {"d": "2026-04-27", "B": 1201846.75, "I": -1716345.28, "BB": 542.83, "BS": 18.64, "S": 23895.45, "SF": 282.04, "T": -489759.57, "R": 2106304.59, "P": -419997.15}, {"d": "2026-04-28", "B": 1201846.75, "I": -865193.02, "BB": 1780.0, "BS": 142.74, "S": 68170.88, "SF": 282.04, "T": 407029.39, "R": 2471186.96, "P": -1574398}, {"d": "2026-04-29", "B": 1702593.36, "I": 1253139.58, "BB": 748.67, "BS": 142.74, "S": 237.18, "SF": 282.04, "T": 2957143.57, "R": 2550223.18, "P": -109}, {"d": "2026-04-30", "B": 1984970.71, "I": 3652747.23, "BB": 738.67, "BS": 142.74, "S": 640.94, "SF": 282.5, "T": 5639522.79, "R": 2789587.29, "P": -107233.45}, {"d": "2026-05-01", "B": 1984970.71, "I": 3652747.23, "BB": 738.67, "BS": 142.74, "S": 640.94, "SF": 282.5, "T": 5639522.79, "R": 0, "P": 0}, {"d": "2026-05-04", "B": 2009858.4, "I": 3434949.35, "BB": 41314.56, "BS": 142.74, "S": 39454.91, "SF": 282.5, "T": 5526002.46, "R": 130257.23, "P": -243777.56}, {"d": "2026-05-05", "B": 46717.41, "I": -440738.65, "BB": 225.48, "BS": 69.74, "S": 454.91, "SF": 282.5, "T": -392988.61, "R": 127573.47, "P": -6046564.54}, {"d": "2026-05-06", "B": 46717.41, "I": 253979.58, "BB": 25383.49, "BS": 69.74, "S": 445.01, "SF": 282.5, "T": 326877.73, "R": 975168.01, "P": -255301.67}, {"d": "2026-05-07", "B": 78854.78, "I": 27239.77, "BB": 373.49, "BS": 69.74, "S": 445.01, "SF": 282.5, "T": 107265.29, "R": 49514.15, "P": -269126.59}, {"d": "2026-05-08", "B": 88129.65, "I": 52507.83, "BB": 363.49, "BS": 69.74, "S": 445.01, "SF": 282.5, "T": 141798.22, "R": 69218.23, "P": -34685.3}, {"d": "2026-05-11", "B": 168732.54, "I": -283575.5, "BB": 363.49, "BS": 69.74, "S": 445.01, "SF": 282.5, "T": -113682.22, "R": 80602.89, "P": -336083.33}, {"d": "2026-05-12", "B": 143472.98, "I": -284251.29, "BB": 102.39, "BS": 69.74, "S": 445.01, "SF": 282.5, "T": -139878.67, "R": 4256.21, "P": -30452.66}, {"d": "2026-05-13", "B": 424815.82, "I": -187535.38, "BB": 976.82, "BS": 69.74, "S": 445.01, "SF": 282.5, "T": 239054.51, "R": 559663.88, "P": -180730.7}, {"d": "2026-05-14", "B": 78815.82, "I": 17917.97, "BB": 976.82, "BS": 69.74, "S": 445.01, "SF": 282.5, "T": 98507.86, "R": 0, "P": -140546.65}, {"d": "2026-05-15", "B": 85867.86, "I": 152414.84, "BB": 1093.73, "BS": 69.74, "S": 445.01, "SF": 282.5, "T": 240173.68, "R": 273473.09, "P": -131807.27}, {"d": "2026-05-18", "B": 185434.52, "I": 5317.41, "BB": 1083.73, "BS": 69.74, "S": 445.01, "SF": 282.5, "T": 192632.91, "R": 114566.87, "P": -162107.64}, {"d": "2026-05-19", "B": 19546.35, "I": -159925.21, "BB": 537.38, "BS": 69.74, "S": 445.01, "SF": 282.5, "T": -139044.23, "R": 636463.65, "P": -968140.79}, {"d": "2026-05-20", "B": 796.47, "I": -4704495.27, "BB": 537.38, "BS": 69.74, "S": 445.01, "SF": 282.5, "T": -4702364.17, "R": 89802.02, "P": -4653121.96}, {"d": "2026-05-21", "B": 130167.84, "I": -4707641.08, "BB": 537.38, "BS": 69.74, "S": 445.01, "SF": 282.5, "T": -4576138.61, "R": 129371.57, "P": -3146.01}, {"d": "2026-05-22", "B": 130167.84, "I": -4421827.58, "BB": 217.04, "BS": 69.74, "S": 445.01, "SF": 282.5, "T": -4290645.45, "R": 363609.57, "P": -78116.41}, {"d": "2026-05-25", "B": -2151073.39, "I": -4991967.13, "BB": 1056.32, "BS": 69.74, "S": 445.01, "SF": 282.5, "T": -7141186.95, "R": 1415174.65, "P": -4265716.15}, {"d": "2026-05-26", "B": -2009025.38, "I": -4971063.63, "BB": 795.22, "BS": 69.74, "S": 57.87, "SF": 282.5, "T": -6978883.68, "R": 731858.37, "P": -569555.1}, {"d": "2026-05-27", "B": -1410676.28, "I": -4950468.36, "BB": 194674.46, "BS": 106.31, "S": 47.97, "SF": 282.5, "T": -6166033.4, "R": 925310.21, "P": -112459.93}, {"d": "2026-05-28", "B": 623394.17, "I": -4340468.36, "BB": 462.51, "BS": 129.19, "S": 843.73, "SF": 282.5, "T": -3715356.26, "R": 2450699.04, "P": -21.9}, {"d": "2026-05-29", "B": 623394.17, "I": -4340468.36, "BB": 462.51, "BS": 129.19, "S": 843.73, "SF": 282.5, "T": -3715356.26, "R": 0, "P": 0}];
+const SD  = {"hoje": "2026-05-31", "dua": "2026-05-29", "inss": 4104000, "saldo_bancario": -3715356.2600000002, "bancos": [{"nome": "Bradesco", "saldo": 623394.17, "key": "Bradesco", "cor": "#4f8ef7"}, {"nome": "Santander", "saldo": 843.73, "key": "Santander", "cor": "#f59e0b"}, {"nome": "Brasil", "saldo": 462.51, "key": "Brasil", "cor": "#22c55e"}, {"nome": "Safra", "saldo": 282.5, "key": "Safra", "cor": "#a78bfa"}, {"nome": "Brasil SP", "saldo": 129.19, "key": "BrasilSP", "cor": "#14b8a6"}, {"nome": "Ita\u00fa", "saldo": -4340468.36, "key": "Itau", "cor": "#f43f5e"}], "recebimentos": [{"nome": "SANTANDER", "valor": 1459795.76}, {"nome": "BRADESCO", "valor": 443121.27}, {"nome": "SEFAZ - BA", "valor": 292321.34}, {"nome": "BRADESCO SEGUROS", "valor": 131941.37}, {"nome": "SERASA", "valor": 81724.58}, {"nome": "CARREFOUR", "valor": 41786.71}], "pagamentos": [{"nome": "Tarifa Banc\u00e1ria", "valor": 21.9}]}; // snapshot padrão
+
+let S = JSON.parse(JSON.stringify(SD)); // estado atual (muda ao subir novo xlsx)
+let ativoBancos = new Set(S.bancos.map(b=>b.key));
+let chSaldo=null, chRP=null, sbOpen=true;
+
+// ── HELPERS ─────────────────────────────────────────────────────
+const fmtBR = v => { const n=Math.round(v); const s=Math.abs(n).toLocaleString("pt-BR"); return n<0?"("+s+")":s; };
+const fmtD  = s => { if(!s)return""; const[y,m,d]=s.split("-"); return d+"/"+m+"/"+y; };
+const MESES = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const mLbl  = s => { const[y,m]=s.split("-"); return MESES[+m-1]+"/"+y.slice(2); };
+
+// ── SIDEBAR TOGGLE ───────────────────────────────────────────────
+function fecharSb(){
+  sbOpen=false;
+  document.getElementById("sb").classList.add("off");
+  document.getElementById("overlay").style.display="none";
+}
+function toggleSb(){
+  sbOpen=!sbOpen;
+  document.getElementById("sb").classList.toggle("off",!sbOpen);
+  // Overlay só no mobile
+  if(window.innerWidth<=640){
+    document.getElementById("overlay").style.display=sbOpen?"block":"none";
+  }
+}
+
+// ── FILTROS ──────────────────────────────────────────────────────
+function initFilters(){
+  const anos=[...new Set(HIST.map(r=>r.d.slice(0,4)))].sort();
+  ["ai","af"].forEach(id=>{ const s=document.getElementById(id); s.innerHTML='<option value="">--</option>'; anos.forEach(a=>s.add(new Option(a,a))); });
+  ["mi","mf"].forEach(id=>{ const s=document.getElementById(id); s.innerHTML='<option value="">--</option>'; MESES.forEach((m,i)=>s.add(new Option(m,String(i+1).padStart(2,"0")))); });
+}
+function onPreset(){ ["mi","ai","mf","af"].forEach(id=>document.getElementById(id).value=""); redraw(); }
+function onCustom(){ document.getElementById("sel-pre").value=""; redraw(); }
+
+function getFilt(){
+  const pre=document.getElementById("sel-pre").value;
+  const mi=document.getElementById("mi").value, ai=document.getElementById("ai").value;
+  const mf=document.getElementById("mf").value, af=document.getElementById("af").value;
+  if(ai||mi||af||mf){
+    const s=ai&&mi?ai+"-"+mi+"-01":ai?ai+"-01-01":mi?"2025-"+mi+"-01":null;
+    const e=af&&mf?af+"-"+mf+"-31":af?af+"-12-31":mf?"2026-"+mf+"-31":null;
+    return HIST.filter(r=>(!s||r.d>=s)&&(!e||r.d<=e));
+  }
+  if(!pre||pre==="9999") return HIST;
+  const days=parseInt(pre);
+  const last=HIST[HIST.length-1].d;
+  const cut=new Date(last+"T12:00:00"); cut.setDate(cut.getDate()-days);
+  const cs=cut.toISOString().split("T")[0];
+  return HIST.filter(r=>r.d>=cs);
+}
+
+// ── RENDERIZAÇÃO ─────────────────────────────────────────────────
+function renderAll(){ renderKPIs(); renderBancos(); renderRecebPag(); renderChips(); redraw(); }
+
+function renderKPIs(){
+  const op=S.saldo_bancario-S.inss;
+  const tr=S.recebimentos.reduce((a,r)=>a+r.valor,0);
+  document.getElementById("tb-title").textContent="Posição Financeira "+fmtD(S.hoje);
+  document.getElementById("tb-dua").textContent="Movimentação de "+fmtD(S.dua);
+  document.getElementById("foot-d").textContent=fmtD(S.hoje);
+  document.getElementById("kv-banc").textContent=fmtBR(S.saldo_bancario);
+  document.getElementById("ks-banc").textContent=fmtD(S.hoje);
+  document.getElementById("kv-inss").textContent=fmtBR(S.inss);
+  document.getElementById("kv-oper").textContent=fmtBR(op);
+  document.getElementById("ks-oper").textContent=fmtD(S.hoje);
+  document.getElementById("kv-recb").textContent=fmtBR(tr);
+  document.getElementById("ks-recb").textContent=fmtD(S.dua);
+  document.getElementById("sub-banc").textContent="Posição em "+fmtD(S.hoje);
+  document.getElementById("sub-recb").textContent=fmtD(S.dua);
+  document.getElementById("sub-pag").textContent=fmtD(S.dua);
+}
+
+function renderBancos(){
+  const sb=S.saldo_bancario;
+  document.getElementById("tb-banc").innerHTML=S.bancos.map(b=>`
+    <tr><td style="display:flex;align-items:center;gap:8px">
+      <span style="width:7px;height:7px;border-radius:50%;background:${b.cor};flex-shrink:0"></span>${b.nome}
+    </td><td class="${b.saldo<0?"vn":"vp"}">${fmtBR(b.saldo)}</td></tr>`).join("");
+  document.getElementById("tf-banc").innerHTML=
+    `<tr class="tf ${sb<0?"fr":"fb"}"><td>Saldo Bancário Total</td><td>${fmtBR(sb)}</td></tr>`;
+}
+
+function renderRecebPag(){
+  const tr=S.recebimentos.reduce((a,r)=>a+r.valor,0);
+  const tp=S.pagamentos.reduce((a,p)=>a+p.valor,0);
+  document.getElementById("tb-recb").innerHTML=S.recebimentos.map(r=>`<tr><td>${r.nome}</td><td class="vp">${fmtBR(r.valor)}</td></tr>`).join("");
+  document.getElementById("tf-recb").innerHTML=`<tr class="tf fg"><td>Total</td><td>${fmtBR(tr)}</td></tr>`;
+  document.getElementById("tb-pag").innerHTML=S.pagamentos.map(p=>`<tr><td>${p.nome}</td><td class="vn">${fmtBR(p.valor)}</td></tr>`).join("");
+  document.getElementById("tf-pag").innerHTML=`<tr class="tf fr"><td>Total</td><td>${fmtBR(tp)}</td></tr>`;
+}
+
+function renderChips(){
+  document.getElementById("chips").innerHTML=S.bancos.map(b=>`
+    <div class="chip on" id="chip-${b.key}" onclick="togBanco('${b.key}')">
+      <span class="cdot" style="background:${b.cor}"></span>${b.nome}
+    </div>`).join("");
+  ativoBancos=new Set(S.bancos.map(b=>b.key));
+}
+function togBanco(k){
+  if(ativoBancos.has(k)){if(ativoBancos.size<=1)return; ativoBancos.delete(k);}
+  else ativoBancos.add(k);
+  document.getElementById("chip-"+k)?.classList.toggle("on",ativoBancos.has(k));
+  redraw();
+}
+
+// ── GRÁFICOS ─────────────────────────────────────────────────────
+const baseScales=()=>({
+  x:{grid:{color:"rgba(255,255,255,.03)"},ticks:{color:"#4a4f62",font:{size:11},maxTicksLimit:12,
+    callback:function(v){const l=this.getLabelForValue(v);return l?mLbl(l):""}}},
+  y:{grid:{color:"rgba(255,255,255,.03)"},ticks:{color:"#4a4f62",font:{size:11},
+    callback:v=>{if(Math.abs(v)>=1e6)return(v/1e6).toFixed(1)+"M";if(Math.abs(v)>=1e3)return(v/1e3).toFixed(0)+"K";return v;}}}
+});
+const baseTip=()=>({
+  backgroundColor:"#1a1e29",borderColor:"rgba(255,255,255,.08)",borderWidth:1,
+  titleColor:"#8b90a0",bodyColor:"#e8eaf0",
+  callbacks:{
+    title:items=>{const[y,m,d]=items[0].label.split("-");return d+"/"+m+"/"+y;},
+    label:ctx=>` ${ctx.dataset.label}: R$ ${fmtBR(ctx.raw)}`
+  }
+});
+
+function redraw(){
+  const h=getFilt(); const lbs=h.map(r=>r.d);
+
+  if(chSaldo) chSaldo.destroy();
+  chSaldo=new Chart(document.getElementById("ch-saldo").getContext("2d"),{
+    type:"line",
+    data:{labels:lbs,datasets:[{
+      label:"Saldo total",data:h.map(r=>r.T),
+      borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.3,fill:true,
+      segment:{
+        borderColor:ctx=>(ctx.p0.parsed.y<0||ctx.p1.parsed.y<0)?"#f43f5e":"#4f8ef7",
+        backgroundColor:ctx=>(ctx.p0.parsed.y<0||ctx.p1.parsed.y<0)?"rgba(244,63,94,.07)":"rgba(79,142,247,.07)"
+      },
+      borderColor:"#4f8ef7",backgroundColor:"rgba(79,142,247,.07)"
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:"index",intersect:false},
+      plugins:{legend:{display:false},tooltip:baseTip()},
+      scales:baseScales()}
+  });
+
+  if(chRP) chRP.destroy();
+  chRP=new Chart(document.getElementById("ch-rp").getContext("2d"),{
+    type:"line",
+    data:{labels:lbs,datasets:[
+      {label:"Recebimentos",data:h.map(r=>r.R),borderColor:"#22c55e",backgroundColor:"rgba(34,197,94,.08)",borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.3,fill:true},
+      {label:"Pagamentos",data:h.map(r=>Math.abs(r.P)),borderColor:"#f43f5e",backgroundColor:"rgba(244,63,94,.08)",borderWidth:2,pointRadius:0,pointHoverRadius:4,tension:.3,fill:true}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:"index",intersect:false},
+      plugins:{legend:{position:"top",labels:{color:"#8b90a0",font:{size:11,family:"DM Sans"},padding:12,boxWidth:24,boxHeight:2}},tooltip:baseTip()},
+      scales:baseScales()}
+  });
+}
+
+// ── UPLOAD XLSX ──────────────────────────────────────────────────
+// Colunas fixas do Fluxo do Banco (índices 0-based):
+// B=1(DATA) G=6(Bradesco) M=12(Itaú) S=18(Brasil) Y=24(BrasilSP)
+// AK=36(Santander) AQ=42(Safra)
+// AT=45(Recebimento) AV=47(Pagamento) AX=49(Saldo Total)
+function parseDate(v){
+  if(!v) return null;
+  if(v instanceof Date){
+    if(isNaN(v.getTime())) return null;
+    const y=v.getUTCFullYear(),m=v.getUTCMonth()+1,d=v.getUTCDate();
+    if(y<2020||y>2030) return null;
+    return y+"-"+String(m).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+  }
+  if(typeof v==="number"&&v>40000&&v<60000){
+    const dt=new Date(Math.round((v-25569)*86400*1000));
+    const y=dt.getUTCFullYear(),m=dt.getUTCMonth()+1,d=dt.getUTCDate();
+    if(y<2020||y>2030) return null;
+    return y+"-"+String(m).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+  }
+  if(typeof v==="string"){
+    const m=v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if(m) return m[3]+"-"+m[2]+"-"+m[1];
+    if(/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  }
+  return null;
+}
+
+function loadFile(file){
+  if(!file) return;
+  const st=document.getElementById("up-st");
+  st.textContent="Lendo...";
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:"array",cellDates:true,cellNF:false,cellText:false});
+
+      // ── RELATÓRIO ──
+      const relSh=wb.Sheets["RELATÓRIO"]||wb.Sheets["RELATORIO"];
+      if(!relSh){alert("Aba RELATÓRIO não encontrada.");return;}
+      const rel=XLSX.utils.sheet_to_json(relSh,{header:1,defval:null});
+      let bancos=[],inss=4104000,hoje="",dua="",recebimentos=[],pagamentos=[];
+      const recSh=wb.Sheets["Recebimentos"];
+      let inB=false;
+      for(let i=0;i<rel.length;i++){
+        const r=rel[i]; if(!r) continue;
+        const c0=String(r[0]||"").trim(), c0l=c0.toLowerCase(), val=r[1];
+        if(c0==="BANCO"&&String(val||"").trim()==="SALDO"){inB=true;continue;}
+        if(inB){
+          if(!c0){inB=false;continue;}
+          if(c0l.startsWith("saldo bancário")||c0l.startsWith("saldo bancario")){
+            const m=c0.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m)hoje=m[3]+"-"+m[2]+"-"+m[1];
+            inB=false;continue;
+          }
+          if(c0l.startsWith("saldo crédito")||c0l.startsWith("saldo credito")){if(typeof val==="number")inss=val;continue;}
+          if(c0l.startsWith("saldo operacional"))continue;
+          if(typeof val==="number")bancos.push({nome:c0,saldo:val});
+        }
+        if(c0l.startsWith("recebimento")&&!c0l.startsWith("recebimentos")){
+          const m=c0.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m)dua=m[3]+"-"+m[2]+"-"+m[1];
+          if(!recSh){for(let j=i+1;j<rel.length;j++){const rr=rel[j];if(!rr||!rr[0])break;if(typeof rr[1]==="number")recebimentos.push({nome:String(rr[0]).trim(),valor:rr[1]});}}
+        }
+        if(c0l.startsWith("pagamento")&&!c0l.startsWith("pagamentos")){
+          if(!dua){const m=c0.match(/(\d{2})\/(\d{2})\/(\d{4})/);if(m)dua=m[3]+"-"+m[2]+"-"+m[1];}
+          for(let j=i+1;j<rel.length;j++){const pr=rel[j];if(!pr||!pr[0])break;if(typeof pr[1]==="number")pagamentos.push({nome:String(pr[0]).trim(),valor:pr[1]});}
+        }
+      }
+      if(recSh){
+        const rows=XLSX.utils.sheet_to_json(recSh,{header:1,defval:null});
+        const g={};
+        for(let i=1;i<rows.length;i++){const r=rows[i];if(!r||!r[0])continue;const k=String(r[0]).trim().replace(/_/g," ");if(k)g[k]=(g[k]||0)+(typeof r[1]==="number"?r[1]:0);}
+        recebimentos=Object.entries(g).map(([nome,valor])=>({nome,valor:Math.round(valor*100)/100})).sort((a,b)=>b.valor-a.valor);
+      }
+      const saldoBanc=bancos.reduce((s,b)=>s+b.saldo,0);
+
+      // ── FLUXO DO BANCO: colunas fixas ──
+      const fdbSh=wb.Sheets["Fluxo do Banco"];
+      if(!fdbSh){alert("Aba 'Fluxo do Banco' não encontrada.");return;}
+      const fdb=XLSX.utils.sheet_to_json(fdbSh,{header:1,defval:null});
+      const newHist=[];
+      for(let i=0;i<fdb.length;i++){
+        const row=fdb[i]; if(!row) continue;
+        const ds=parseDate(row[1]); // coluna B = índice 1
+        if(!ds||ds<"2025-01-01") continue;
+        // Filtrar linhas futuras (projetadas na planilha)
+        if(hoje&&ds>hoje) continue;
+        const T=typeof row[49]==="number"?row[49]:0; // AX
+        const B=typeof row[6] ==="number"?row[6] :0; // G
+        const I=typeof row[12]==="number"?row[12]:0; // M
+        if(T===0&&B===0&&I===0) continue;
+        newHist.push({
+          d:ds,
+          B:Math.round(B*100)/100,
+          I:Math.round(I*100)/100,
+          BB:Math.round((row[18]||0)*100)/100,  // S
+          BS:Math.round((row[24]||0)*100)/100,  // Y
+          S:Math.round((row[36]||0)*100)/100,   // AK
+          SF:Math.round((row[42]||0)*100)/100,  // AQ
+          T:Math.round(T*100)/100,
+          R:Math.round((typeof row[45]==="number"?row[45]:0)*100)/100, // AT
+          P:Math.round((typeof row[47]==="number"?row[47]:0)*100)/100, // AV
+        });
+      }
+      if(newHist.length>0) HIST=newHist;
+
+      const CM={"Bradesco":"#4f8ef7","Santander":"#f59e0b","Brasil":"#22c55e","Safra":"#a78bfa","Brasil SP":"#14b8a6","Itaú":"#f43f5e"};
+      S={hoje:hoje||SD.hoje,dua:dua||SD.dua,inss,saldo_bancario:saldoBanc,
+        bancos:bancos.map(b=>({...b,key:b.nome.replace(/\s/g,"").replace(/[úù]/g,"u").replace(/[ãâ]/g,"a").replace(/[éê]/g,"e"),cor:CM[b.nome]||"#888"})),
+        recebimentos,pagamentos};
+
+      initFilters();
+      renderAll();
+      // Fecha sidebar no mobile após carregar
+      if(window.innerWidth<=640){ sbOpen=false; document.getElementById("sb").classList.add("off"); }
+      st.textContent="✓ "+bancos.length+" bancos · "+newHist.length+" dias";
+      setTimeout(()=>st.textContent="",5000);
+    }catch(err){
+      console.error(err);
+      st.style.color="var(--rd)";
+      st.textContent="Erro: "+err.message;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// ── INIT ─────────────────────────────────────────────────────────
+// Fecha sidebar automaticamente em telas pequenas (mobile)
+if(window.innerWidth<=640){ sbOpen=false; document.getElementById("sb").classList.add("off"); }
+initFilters();
+renderAll();
+</script>
+</body>
+</html>
