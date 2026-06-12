@@ -1,0 +1,35 @@
+name: Atualizar Dashboard
+
+on:
+  push:
+    paths:
+      - "data/Fluxo_de_recebimento.xlsx"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install pandas openpyxl
+
+      - name: Processar Excel e gerar HTML
+        run: python process_data.py
+
+      - name: Commit index.html
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Auto-deploy: dados atualizados [skip ci]"
+          git push
