@@ -18,7 +18,6 @@ df["MES SERVICO"] = pd.to_datetime(df["MÊS SERVIÇO"], errors="coerce")
 df["DATA PAG"]    = pd.to_datetime(df["DATA PAG."],    errors="coerce")
 df["EMISSAO"]     = pd.to_datetime(df["EMISSÃO"],      errors="coerce")
 
-# Filtrar apenas registros com PREV.PAG preenchido
 df = df[df["PREV . PAG"].notna()].copy()
 
 df["PREV_PAG_DT"] = df["PREV . PAG"].dt.strftime("%Y-%m-%d")
@@ -43,10 +42,13 @@ print(f"[3/4] Lendo {TEMPLATE_PATH}...")
 with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
     html = f.read()
 
-# Substituir bloco var RAW = [...]; no template
+# CORREÇÃO: usar lambda para evitar que o Python interprete
+# sequências de escape (\u, \n, etc.) presentes no JSON/HTML como
+# escape de regex — causava "re.error: bad escape \u"
+replacement = raw_json
 html = re.sub(
     r"var RAW\s*=\s*\[.*?\];",
-    f"var RAW = {raw_json};",
+    lambda m: f"var RAW = {replacement};",
     html,
     flags=re.DOTALL
 )
