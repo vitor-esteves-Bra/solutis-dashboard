@@ -7,19 +7,10 @@ on:
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  processar:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout
@@ -42,31 +33,11 @@ jobs:
             echo "Renomeando: $f -> Fluxo_de_recebimento.xlsx"
             mv "$f" "Fluxo_de_recebimento.xlsx"
           done
-          ls -lh
 
       - name: Processar Excel e gerar HTML
         run: python process_data.py
 
-      # Deploy do artefato gerado AGORA (não do que está no repo)
-      - name: Criar pasta de deploy com HTML atualizado
-        run: |
-          mkdir -p _site
-          cp index.html _site/index.html
-
-      - name: Configurar GitHub Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload artefato para Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: "_site"
-
-      - name: Deploy no GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-
-      # Salvar index.html no repo APÓS o deploy (sem acionar novo workflow)
-      - name: Salvar index.html no repositório
+      - name: Commitar index.html atualizado
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
