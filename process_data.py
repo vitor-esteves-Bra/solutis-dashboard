@@ -4,8 +4,8 @@ process_data.py — Lê data/Fluxo_de_recebimento.xlsx e gera index.html.
 Executado automaticamente pelo GitHub Actions a cada push do Excel.
 """
 import pandas as pd
-import json, re, sys
-from datetime import datetime
+import json, re, os
+from datetime import datetime, timezone
 
 EXCEL_PATH    = "data/Fluxo_de_recebimento.xlsx"
 TEMPLATE_PATH = "template.html"
@@ -35,23 +35,27 @@ cols = ["MES","PREV_PAG_DT","Excecutivo","Grupo Cliente","CLIENTE",
         "BU","Vertical","DirOP","STATUS","VL_FAT","PMR_DIAS"]
 raw = df[cols].to_dict("records")
 
-total_registros = len(raw)
-
 print(f"[2/4] {len(raw)} registros processados")
 
 raw_json = json.dumps(raw, ensure_ascii=True)
 
-ultima_atualizacao = datetime.now().strftime("%d/%m/%Y às %H:%M")
+# Data/hora do processamento no fuso de Brasília (UTC-3)
+now_utc   = datetime.now(timezone.utc)
+# Formatar como DD/MM/AAAA HH:MM (horário de Brasília)
+from datetime import timedelta
+now_brt   = now_utc - timedelta(hours=3)
+excel_date = now_brt.strftime("%d/%m/%Y %H:%M")
+print(f"[2b] Data do processamento (BRT): {excel_date}")
 
 print(f"[3/4] Lendo {TEMPLATE_PATH}...")
 with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
     html = f.read()
 
-# CORREÇÃO: usar lambda para evitar que o Python interprete
-# sequências de escape (\u, \n, etc.) presentes no JSON/HTML como
-# escape de regex — causava "re.error: bad escape \u"
-replacement = raw_json
+# Substituir marcador de data do Excel
+html = html.replace("__EXCEL_DATE__", excel_date)
 
+# Substituir bloco var RAW usando lambda para evitar bad escape
+replacement = raw_json
 html = re.sub(
     r"var RAW\s*=\s*\[.*?\];",
     lambda m: f"var RAW = {replacement};",
