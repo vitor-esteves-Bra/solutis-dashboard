@@ -35,6 +35,8 @@ cols = ["MES","PREV_PAG_DT","Excecutivo","Grupo Cliente","CLIENTE",
         "BU","Vertical","DirOP","STATUS","VL_FAT","PMR_DIAS"]
 raw = df[cols].to_dict("records")
 
+total_registros = len(raw)
+
 print(f"[2/4] {len(raw)} registros processados")
 
 raw_json = json.dumps(raw, ensure_ascii=True)
