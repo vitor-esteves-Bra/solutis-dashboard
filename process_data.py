@@ -39,6 +39,8 @@ print(f"[2/4] {len(raw)} registros processados")
 
 raw_json = json.dumps(raw, ensure_ascii=True)
 
+ultima_atualizacao = datetime.now().strftime("%d/%m/%Y às %H:%M")
+
 print(f"[3/4] Lendo {TEMPLATE_PATH}...")
 with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
     html = f.read()
