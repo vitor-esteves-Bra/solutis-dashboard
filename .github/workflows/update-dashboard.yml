@@ -5,16 +5,14 @@ on:
     paths:
       - "data/**"
 
-# Permissões necessárias para deploy via GitHub Pages Actions
 permissions:
   contents: write
   pages: write
   id-token: write
 
-# Evitar deploys simultâneos
 concurrency:
   group: "pages"
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-and-deploy:
@@ -49,7 +47,8 @@ jobs:
       - name: Processar Excel e gerar HTML
         run: python process_data.py
 
-      - name: Criar pasta de deploy
+      # Deploy do artefato gerado AGORA (não do que está no repo)
+      - name: Criar pasta de deploy com HTML atualizado
         run: |
           mkdir -p _site
           cp index.html _site/index.html
@@ -66,10 +65,11 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
+      # Salvar index.html no repo APÓS o deploy (sem acionar novo workflow)
       - name: Salvar index.html no repositório
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add index.html data/
-          git diff --cached --quiet || git commit -m "Auto-deploy: dados atualizados [skip ci]"
+          git diff --cached --quiet || git commit -m "chore: index.html atualizado [skip ci]"
           git push
