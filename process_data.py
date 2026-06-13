@@ -5,6 +5,7 @@ Executado automaticamente pelo GitHub Actions a cada push do Excel.
 """
 import pandas as pd
 import json, re, sys
+from datetime import datetime
 
 EXCEL_PATH    = "data/Fluxo_de_recebimento.xlsx"
 TEMPLATE_PATH = "template.html"
