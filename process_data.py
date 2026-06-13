@@ -46,6 +46,7 @@ with open(TEMPLATE_PATH, "r", encoding="utf-8") as f:
 # sequências de escape (\u, \n, etc.) presentes no JSON/HTML como
 # escape de regex — causava "re.error: bad escape \u"
 replacement = raw_json
+
 html = re.sub(
     r"var RAW\s*=\s*\[.*?\];",
     lambda m: f"var RAW = {replacement};",
