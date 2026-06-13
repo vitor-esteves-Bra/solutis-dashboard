@@ -888,13 +888,14 @@ document.getElementById("fi").addEventListener("change", function(ev) {
       if (j.raw) { RAW.length = 0; j.raw.forEach(function(r){ RAW.push(r); }); }
       populateSels(); render();
       document.getElementById("lup").textContent = new Date().toLocaleDateString("pt-BR");
-  // Exibir data do último Excel processado
+  // Exibir data do último Excel processado (injetada pelo pipeline)
   if (typeof EXCEL_DEPLOY_DATE !== "undefined" && EXCEL_DEPLOY_DATE && EXCEL_DEPLOY_DATE !== "__EXCEL_DATE__") {
-    var badge = document.getElementById("badge-excel");
-    var span  = document.getElementById("excel-date");
-    if (badge) badge.style.display = "flex";
-    if (span)  span.textContent = EXCEL_DEPLOY_DATE;
+    var bdg  = document.getElementById("badge-excel");
+    var span = document.getElementById("excel-date");
+    if (bdg)  bdg.style.display  = "flex";
+    if (span) span.textContent   = EXCEL_DEPLOY_DATE;
   }
+
       showToast("Base de dados atualizada.");
     } catch(err) { showToast("Erro ao processar o arquivo."); }
     finally { document.getElementById("ld").classList.remove("on"); }
