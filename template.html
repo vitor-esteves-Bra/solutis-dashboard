@@ -1594,12 +1594,14 @@ document.addEventListener("DOMContentLoaded", function() {
     });
     inp.focus();
   }
-  // Sincronizar logo do login
-  setTimeout(function() {
+  // Sincronizar logo do login — tentar imediatamente e via timeout
+  var _syncLogo = function() {
     var li = document.getElementById("login-logo-img");
     var lm = document.getElementById("logoimg");
-    if (li && lm && lm.src) li.src = lm.src;
-  }, 100);
+    if (li && lm && lm.src) { li.src = lm.src; return true; }
+    return false;
+  };
+  if (!_syncLogo()) { setTimeout(_syncLogo, 50); setTimeout(_syncLogo, 200); setTimeout(_syncLogo, 500); }
 });
 
 
