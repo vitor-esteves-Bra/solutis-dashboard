@@ -1533,29 +1533,17 @@ render();
 })();
 
 // ── Autenticação ─────────────────────────────────────────────────
-var PWD_HASH = "da4c7f1c4b8c62b5b7e5c5a4e5d5f5a6"; // hash simples
-
-function simpleHash(s) {
-  // djb2 determinístico — suficiente para proteção visual
-  var h = 5381;
-  for (var i = 0; i < s.length; i++) {
-    h = ((h << 5) + h) + s.charCodeAt(i);
-    h = h & 0x7fffffff;
-  }
-  return h.toString(16);
-}
-
-// Hash real da senha "data_analytics"
-var CORRECT_HASH = simpleHash("data_analytics");
+// Senha de acesso (proteção visual)
+var CORRECT_PWD = "data_analytics";
 
 function doLogin() {
   var val = document.getElementById("login-input").value;
   var inp = document.getElementById("login-input");
   var err = document.getElementById("login-error");
-  if (simpleHash(val) === CORRECT_HASH) {
+  if (val === CORRECT_PWD) {
     var overlay = document.getElementById("login-overlay");
     overlay.classList.add("hidden");
-    setTimeout(function(){ overlay.style.display = "none"; }, 450);
+    overlay.style.display = "none";
     err.textContent = "";
     // Setar logo no login também
     var li = document.getElementById("login-logo-img");
