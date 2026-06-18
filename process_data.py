@@ -18,8 +18,14 @@ df["PMR_DIAS"]    = (df["PREV . PAG"] - df["MES SERVICO"]).dt.days.fillna(-1).as
 for c in ["Grupo Cliente","CLIENTE","Excecutivo","BU","Vertical","Diretor de Operações","STATUS"]:
     df[c] = df[c].fillna("").astype(str).str.strip()
 df["DirOP"] = df["Diretor de Operações"]
+
+# Colunas de risco (M e N)
+df["VL_RISCO"]    = pd.to_numeric(df["Risco"], errors="coerce").fillna(0)
+df["NIVEL_RISCO"] = df["NIVEL RISCO"].fillna("").astype(str).str.strip().str.lower()
+
 cols = ["MES","PREV_PAG_DT","Excecutivo","Grupo Cliente","CLIENTE",
-        "BU","Vertical","DirOP","STATUS","VL_FAT","PMR_DIAS"]
+        "BU","Vertical","DirOP","STATUS","VL_FAT","PMR_DIAS",
+        "VL_RISCO","NIVEL_RISCO"]
 raw_json = json.dumps(df[cols].to_dict("records"), ensure_ascii=True)
 print(f"{len(df)} registros processados")
 
