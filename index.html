@@ -566,7 +566,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
     </div>
     <div class="hbadge">
       <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Base: <strong>18/06/2026 07:44</strong>
+      Base: <strong>18/06/2026 08:31</strong>
     </div>
     <!--BADGE_EXCEL_PLACEHOLDER-->
     <button class="upbtn" id="upbtn">
@@ -624,31 +624,6 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
     </div>
     <div class="kg" id="kg"></div>
     <div class="sh">
-      <div class="shi"><svg width="14" height="14" fill="none" stroke="var(--az)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
-      <div><div class="sht">Meta Junho &middot; Previsto x Business Review</div><div class="shs">Valores em R$ &middot; Comparativo do mes de Junho/26</div></div>
-      <div class="shl"></div>
-    </div>
-    <div class="card" style="margin-bottom:16px">
-      <div class="ch">
-        <div><div class="ct">Atingimento da Meta de Junho</div>
-             <div class="csb">Recebimento Previsto (posicao atual do dashboard) vs. Business Review de Junho/26</div></div>
-      </div>
-      <div class="brv-toolbar" id="brv-toolbar">
-        <button class="brv-dim-btn active" data-dim="grp" onclick="setBrvDim('grp')">Grupo Cliente</button>
-        <button class="brv-dim-btn" data-dim="cli" onclick="setBrvDim('cli')">Cliente</button>
-        <button class="brv-dim-btn" data-dim="op"  onclick="setBrvDim('op')">Diretoria OP</button>
-        <button class="brv-dim-btn" data-dim="bu"  onclick="setBrvDim('bu')">BU</button>
-      </div>
-      <div class="brv-kpi-row" id="brv-kpis"></div>
-      <div class="brv-bar-wrap"><canvas id="ch-brv"></canvas></div>
-      <div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th class="l" id="brv-th-dim">Grupo Cliente</th><th class="r">Previsto</th><th class="r">Business Review</th><th class="r">Diferenca</th><th class="r">% Atingido</th></tr></thead>
-          <tbody id="tb-brv"></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="sh">
       <div class="shi"><svg width="14" height="14" fill="none" stroke="var(--az)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
       <div><div class="sht">Posicao Detalhada por Grupo de Cliente</div><div class="shs">Valores em R$ &middot; Por semana (segunda-feira) &middot; Prev. Pag.</div></div>
       <div class="shl"></div>
@@ -660,6 +635,31 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
         <div style="display:flex;gap:5px" id="gt-pills"></div>
       </div>
       <div class="gt-toolbar" id="gt-toolbar"><button class="gt-lvl-btn active" id="btn-lvl-mes" onclick="setGtLevel('mes')">&#8801;&nbsp; Por M&ecirc;s</button><button class="gt-lvl-btn" id="btn-lvl-sem" onclick="setGtLevel('sem')">&#9776;&nbsp; Por Semana</button><div class="gt-lvl-sep"></div><button class="gt-expand-all" id="btn-exp-all" onclick="toggleAllMeses()">Expandir tudo</button></div><div style="overflow-x:auto"><table class="gt" id="gtbl"><thead id="gth"></thead><tbody id="gtb"></tbody></table></div>
+    </div>
+    <div class="sh">
+      <div class="shi"><svg width="14" height="14" fill="none" stroke="var(--az)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+      <div><div class="sht">Meta Junho &middot; Previsto x Business Review</div><div class="shs">Valores em R$ &middot; Comparativo do mes de Junho/26 &middot; Respeita filtros ativos</div></div>
+      <div class="shl"></div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="ch">
+        <div><div class="ct">Atingimento da Meta de Junho</div>
+             <div class="csb">Recebido (status PAGO, posicao atual do dashboard) vs. Business Review de Junho/26</div></div>
+      </div>
+      <div class="brv-toolbar" id="brv-toolbar">
+        <button class="brv-dim-btn active" data-dim="grp" onclick="setBrvDim('grp')">Grupo Cliente</button>
+        <button class="brv-dim-btn" data-dim="cli" onclick="setBrvDim('cli')">Cliente</button>
+        <button class="brv-dim-btn" data-dim="op"  onclick="setBrvDim('op')">Diretoria OP</button>
+        <button class="brv-dim-btn" data-dim="bu"  onclick="setBrvDim('bu')">BU</button>
+      </div>
+      <div class="brv-kpi-row" id="brv-kpis"></div>
+      <div class="brv-bar-wrap"><canvas id="ch-brv"></canvas></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th class="l" id="brv-th-dim">Grupo Cliente</th><th class="r">Pago</th><th class="r">Business Review</th><th class="r">Diferenca</th><th class="r">% Atingido</th></tr></thead>
+          <tbody id="tb-brv"></tbody>
+        </table>
+      </div>
     </div>
     <div class="sh">
       <div class="shi"><svg width="14" height="14" fill="none" stroke="var(--az)" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
@@ -1583,52 +1583,65 @@ function rBRV() {
 
   function normKey(s) { return (s || "-").toString().trim().toUpperCase(); }
 
-  // Previsto: posição atual do RAW filtrada para Junho/2026, sem aplicar filtros da sidebar
-  var prevMap = {}, labelMap = {};
+  // Filtros estruturais ativos na sidebar (exceto status, que aqui é sempre PAGO).
+  // Executivo é deliberadamente excluído: a nomenclatura varia entre o RAW e o
+  // Business Review (ex: "JOSÉ NETO" vs "JOSÉ NETO COELHO"), o que zeraria o
+  // lado BR incorretamente caso o usuário filtre por esse campo.
+  function passesStructuralFilters(grp, bu, dir) {
+    return (F.grp  === "all" || grp  === F.grp)
+        && (F.bu   === "all" || bu   === F.bu)
+        && (F.dir  === "all" || dir  === F.dir);
+  }
+
+  // Pago: posição atual do RAW, Junho/2026, status PAGO, respeitando filtros da sidebar
+  var pagoMap = {}, labelMap = {};
   RAW.forEach(function(r) {
     if (r.MES !== "2026-06") return;
+    if (r.STATUS !== "PAGO") return;
+    if (!passesStructuralFilters(r["Grupo Cliente"], r.BU, r.DirOP)) return;
     var raw = r[fieldPrev] || "-";
     var k = normKey(raw);
-    prevMap[k] = (prevMap[k] || 0) + r.VL_FAT;
+    pagoMap[k] = (pagoMap[k] || 0) + r.VL_FAT;
     if (!labelMap[k]) labelMap[k] = raw;
   });
 
-  // Business Review: meta fixa de Junho/2026
+  // Business Review: meta fixa de Junho/2026, respeitando os mesmos filtros estruturais
   var brMap = {};
   BR_JUNHO.forEach(function(r) {
+    if (!passesStructuralFilters(r.GRP, r.BU, r.OP)) return;
     var raw = r[fieldBR] || "-";
     var k = normKey(raw);
     brMap[k] = (brMap[k] || 0) + r.VL;
     if (!labelMap[k]) labelMap[k] = raw;
   });
 
-  var keys = Object.keys(Object.assign({}, prevMap, brMap));
+  var keys = Object.keys(Object.assign({}, pagoMap, brMap));
   var rows = keys.map(function(k) {
-    var prev = prevMap[k] || 0;
+    var pago = pagoMap[k] || 0;
     var br   = brMap[k] || 0;
-    var pct  = br > 0 ? (prev / br * 100) : (prev > 0 ? 100 : 0);
-    return { k: labelMap[k] || k, prev: prev, br: br, diff: prev - br, pct: pct };
+    var pct  = br > 0 ? (pago / br * 100) : (pago > 0 ? 100 : 0);
+    return { k: labelMap[k] || k, pago: pago, br: br, diff: pago - br, pct: pct };
   }).sort(function(a, b) { return b.br - a.br; });
 
-  var totPrev = rows.reduce(function(s, r) { return s + r.prev; }, 0);
+  var totPago = rows.reduce(function(s, r) { return s + r.pago; }, 0);
   var totBR   = rows.reduce(function(s, r) { return s + r.br; }, 0);
-  var totPct  = totBR > 0 ? (totPrev / totBR * 100) : 0;
+  var totPct  = totBR > 0 ? (totPago / totBR * 100) : 0;
 
   // KPIs resumo
   var kpis = document.getElementById("brv-kpis");
   if (kpis) {
     var tpct = totPct.toFixed(1).replace(".", ",");
     var cls  = atgClass(totPct);
-    var diffTot = totPrev - totBR;
+    var diffTot = totPago - totBR;
     var diffCls = diffTot >= 0 ? "brv-diff-pos" : "brv-diff-neg";
     kpis.innerHTML =
       "<div class=\"brv-kc\"><div class=\"brv-ke\">% Meta BR Atingida</div>" +
         "<div class=\"brv-kv\">" + tpct + "%</div>" +
         "<div class=\"brv-ksb\"><span class=\"brv-pct-badge " + cls + "\">" + (totPct >= 95 ? "Meta atingida" : totPct >= 75 ? "Proximo da meta" : "Abaixo da meta") + "</span></div>" +
       "</div>" +
-      "<div class=\"brv-kc\"><div class=\"brv-ke\">Previsto Junho</div>" +
-        "<div class=\"brv-kv\">" + fmt(totPrev) + "</div>" +
-        "<div class=\"brv-ksb\">Posicao atual do dashboard</div>" +
+      "<div class=\"brv-kc\"><div class=\"brv-ke\">Pago Junho</div>" +
+        "<div class=\"brv-kv\">" + fmt(totPago) + "</div>" +
+        "<div class=\"brv-ksb\">Status PAGO &middot; posicao atual do dashboard</div>" +
       "</div>" +
       "<div class=\"brv-kc\"><div class=\"brv-ke\">Business Review Junho</div>" +
         "<div class=\"brv-kv\">" + fmt(totBR) + "</div>" +
@@ -1646,7 +1659,7 @@ function rBRV() {
       data: {
         labels: top.map(function(r) { return r.k.length > 18 ? r.k.slice(0, 18) + "…" : r.k; }),
         datasets: [
-          { label: "Previsto", data: top.map(function(r){ return r.prev; }), backgroundColor: "#3375BE", borderRadius: 4, maxBarThickness: 22 },
+          { label: "Pago", data: top.map(function(r){ return r.pago; }), backgroundColor: "#0E9F6E", borderRadius: 4, maxBarThickness: 22 },
           { label: "Business Review", data: top.map(function(r){ return r.br; }), backgroundColor: "#8A94A6", borderRadius: 4, maxBarThickness: 22 }
         ]
       },
@@ -1667,20 +1680,24 @@ function rBRV() {
 
   var tb = document.getElementById("tb-brv");
   if (tb) {
+    if (rows.length === 0) {
+      tb.innerHTML = "<tr><td colspan=\"5\" class=\"vm\" style=\"text-align:center;padding:18px\">Nenhum dado para os filtros selecionados</td></tr>";
+      return;
+    }
     tb.innerHTML = rows.map(function(r) {
       var cls = atgClass(r.pct);
       var pctLbl = r.pct.toFixed(1).replace(".", ",") + "%";
       var diffCls = r.diff >= 0 ? "brv-diff-pos" : "brv-diff-neg";
       return "<tr>" +
         "<td style=\"font-weight:600\">" + r.k + "</td>" +
-        "<td class=\"r\">" + fmt(r.prev) + "</td>" +
+        "<td class=\"r\">" + fmt(r.pago) + "</td>" +
         "<td class=\"r\">" + fmt(r.br) + "</td>" +
         "<td class=\"r\"><span class=\"" + diffCls + "\">" + (r.diff >= 0 ? "+" : "") + fmt(r.diff) + "</span></td>" +
         "<td class=\"r\"><span class=\"brv-pct-badge " + cls + "\">" + pctLbl + "</span></td>" +
         "</tr>";
     }).join("") +
-    "<tr class=\"trt\"><td>Total Geral</td><td class=\"r\">" + fmt(totPrev) + "</td><td class=\"r\">" + fmt(totBR) + "</td>" +
-    "<td class=\"r\"><span class=\"" + (totPrev - totBR >= 0 ? "brv-diff-pos" : "brv-diff-neg") + "\">" + (totPrev - totBR >= 0 ? "+" : "") + fmt(totPrev - totBR) + "</span></td>" +
+    "<tr class=\"trt\"><td>Total Geral</td><td class=\"r\">" + fmt(totPago) + "</td><td class=\"r\">" + fmt(totBR) + "</td>" +
+    "<td class=\"r\"><span class=\"" + (totPago - totBR >= 0 ? "brv-diff-pos" : "brv-diff-neg") + "\">" + (totPago - totBR >= 0 ? "+" : "") + fmt(totPago - totBR) + "</span></td>" +
     "<td class=\"r\"><span class=\"brv-pct-badge " + atgClass(totPct) + "\">" + totPct.toFixed(1).replace(".", ",") + "%</span></td></tr>";
   }
 }
