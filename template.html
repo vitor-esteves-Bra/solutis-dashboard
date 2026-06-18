@@ -161,11 +161,14 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
 .gt td.dl{text-align:left;font-weight:600;color:var(--t1);white-space:nowrap;padding-right:10px}
 .gt td.dr{text-align:right}
 .gt td.cl{text-align:left;color:var(--t2);padding-left:26px;font-weight:400;font-size:12px;white-space:nowrap}
+.gt td.vt{background:var(--sf2)}
 .gt .crow td{background:var(--sf2)}
 .gt .crow:hover td{background:var(--az8)}
+.gt .crow td.vt{background:#E7ECF2}
 .gt .wks{border-left:1px solid var(--bdl)}
 .gt .wkh{background:var(--sf2);font-size:11px;color:var(--t3);font-weight:600;
   text-align:center;border-left:1px solid var(--bd)}
+.gt th.vth{background:var(--sf2)!important}
 .sp{color:var(--pg)!important}.sa{color:var(--ab)!important}.sf3{color:var(--ft)!important}
 .gt .trt td{border-top:2px solid var(--dv);background:var(--az8)!important;
   font-weight:700;color:var(--t1)!important}
@@ -1239,7 +1242,7 @@ function renderMensal(thead, tbody, grupos, gMap, cMap, mesMap, mesCols, mesFlag
   if (hasPago) h2 += "<th class=\"sp wks\" style=\"padding:4px 6px;font-size:13px\">Pago</th>";
   if (hasAb)   h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px\">Ab.</th>";
   if (hasFat)  h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px\">Fat.</th>";
-  h2 += "<th style=\"padding:4px 6px;font-size:13px;color:var(--az);font-weight:700;text-transform:uppercase\">Total</th></tr>";
+  h2 += "<th class=\"vth\" style=\"padding:4px 6px;font-size:13px;color:var(--az);font-weight:700;text-transform:uppercase\">Total</th></tr>";
   thead.innerHTML = h1 + h2;
 
   // ── Linhas ────────────────────────────────────────────────────────────
@@ -1291,7 +1294,7 @@ function renderMensal(thead, tbody, grupos, gMap, cMap, mesMap, mesCols, mesFlag
         if (hasPago) rows += "<td class=\"dr vp wks\" style=\"font-size:11px;font-weight:600\">" + (cP>0?fmt(cP):"-") + "</td>";
         if (hasAb)   rows += "<td class=\"dr va\" style=\"font-size:11px;font-weight:600\">"     + (cA>0?fmt(cA):"-") + "</td>";
         if (hasFat)  rows += "<td class=\"dr sf3\" style=\"font-size:11px;font-weight:600\">"    + (cF>0?fmt(cF):"-") + "</td>";
-        rows += "<td class=\"dr\" style=\"font-size:11px;font-weight:600;color:var(--t1)\">" + fmt(cP+cA+cF) + "</td></tr>";
+        rows += "<td class=\"dr vt\" style=\"font-size:11px;font-weight:600;color:var(--t1)\">" + fmt(cP+cA+cF) + "</td></tr>";
       });
     }
 
@@ -1320,7 +1323,7 @@ function renderMensal(thead, tbody, grupos, gMap, cMap, mesMap, mesCols, mesFlag
         for (var i=0;i<nstTot2;i++) sc += "<td></td>";
         rows += "<tr class=\"sem-row\" data-mes-child=\"" + mo + "\" data-g-child=\"" + g.replace(/"/g,"&quot;") + "\">";
         rows += "<td class=\"cl\" style=\"padding-left:42px;font-weight:400;font-size:11px;color:var(--t3)\">" + wkLbl(s) + "</td>" + sc;
-        rows += "<td class=\"dr\" style=\"font-size:11px;font-weight:600;color:var(--t1)\">" + fmt(sv.p+sv.a+sv.f) + "</td></tr>";
+        rows += "<td class=\"dr vt\" style=\"font-size:11px;font-weight:600;color:var(--t1)\">" + fmt(sv.p+sv.a+sv.f) + "</td></tr>";
       });
     });
   });
@@ -1368,7 +1371,7 @@ function renderSemanal(thead, tbody, grupos, gMap, cMap, sems, wkFlags, hasPago,
   if (hasPago) h2 += "<th class=\"sp wks\" style=\"padding:4px 6px;font-size:13px\">Pago</th>";
   if (hasAb)   h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px\">Ab.</th>";
   if (hasFat)  h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px\">Fat.</th>";
-  h2 += "<th style=\"padding:4px 6px;font-size:13px;color:var(--az);font-weight:700;text-transform:uppercase\">Total</th></tr>";
+  h2 += "<th class=\"vth\" style=\"padding:4px 6px;font-size:13px;color:var(--az);font-weight:700;text-transform:uppercase\">Total</th></tr>";
   thead.innerHTML = h1 + h2;
 
   var gtP=0,gtA=0,gtF=0;
@@ -1415,7 +1418,7 @@ function renderSemanal(thead, tbody, grupos, gMap, cMap, sems, wkFlags, hasPago,
         if (hasPago) rows += "<td class=\"dr vp wks\" style=\"font-size:11px;font-weight:600\">"+(cP>0?fmt(cP):"-")+"</td>";
         if (hasAb)   rows += "<td class=\"dr va\" style=\"font-size:11px;font-weight:600\">"+(cA>0?fmt(cA):"-")+"</td>";
         if (hasFat)  rows += "<td class=\"dr sf3\" style=\"font-size:11px;font-weight:600\">"+(cF>0?fmt(cF):"-")+"</td>";
-        rows += "<td class=\"dr\" style=\"font-size:11px;font-weight:600;color:var(--t1)\">"+fmt(cP+cA+cF)+"</td></tr>";
+        rows += "<td class=\"dr vt\" style=\"font-size:11px;font-weight:600;color:var(--t1)\">"+fmt(cP+cA+cF)+"</td></tr>";
       });
     }
   });
@@ -1755,6 +1758,8 @@ render();
   // Expor funções necessárias para onclick global (fora do IIFE)
   window._dashRender   = render;
   window._dashExpanded = expanded;
+  window.setBrvDim      = setBrvDim;
+  window.setBrvMes      = setBrvMes;
 
   // Expand grupos — listener unico, registrado uma vez
   (function() {
