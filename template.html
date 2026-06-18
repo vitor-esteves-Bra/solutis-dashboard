@@ -124,6 +124,13 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
 .kbd-r{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
 .kc-r{display:none}
 .kc-r.visible{display:block}
+.krl{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.krl-item{display:flex;flex-direction:column;gap:2px}
+.krl-top{display:flex;justify-content:space-between;align-items:baseline;gap:4px}
+.krl-nome{font-size:10px;font-weight:600;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%}
+.krl-val{font-size:10px;font-weight:700;color:#B91C1C;white-space:nowrap}
+.krl-bar{height:3px;background:#FEE2E2;border-radius:99px;overflow:hidden}
+.krl-barf{height:100%;background:linear-gradient(90deg,#C0392B,#E74C3C);border-radius:99px;transition:width .6s ease}
 .kbar{margin-top:10px;height:3px;background:var(--bd);border-radius:99px;overflow:hidden}
 .kbf{height:100%;border-radius:99px;transition:width .9s cubic-bezier(.22,.68,0,1.2)}
 .card{background:var(--sf);border-radius:var(--rl);border:1px solid var(--bdl);
@@ -1020,15 +1027,20 @@ function populateSels() {
 function render() {
   var data = applyF();
   var tot = 0, p = 0, a = 0, f = 0, nfs = data.length, nfp = 0, totalRisco = 0;
+  var riscoGrupos = {};
   data.forEach(function(r) {
     tot += r.VL_FAT;
     if      (r.STATUS === "PAGO")       { p += r.VL_FAT; nfp++; }
     else if (r.STATUS === "EM ABERTO")    a += r.VL_FAT;
     else                                  f += r.VL_FAT;
-    if (r.NIVEL_RISCO === "alto" && r.VL_RISCO > 0) totalRisco += r.VL_RISCO;
+    if (r.NIVEL_RISCO === "alto" && r.VL_RISCO > 0) {
+      totalRisco += r.VL_RISCO;
+      var g = r["Grupo Cliente"] || "Outros";
+      riscoGrupos[g] = (riscoGrupos[g] || 0) + r.VL_RISCO;
+    }
   });
   var taxa = tot > 0 ? p / tot : 0;
-  rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco);
+  rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos);
   rGrupo(data);
   rMonthly(data);
   rDonut(p, a, f, tot);
@@ -1038,20 +1050,40 @@ function render() {
 }
 
 // ── KPIs ──────────────────────────────────────────────────────────────────
-function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco) {
+function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos) {
   var g = document.getElementById("kg"); if (!g) return;
   var tp = (taxa*100).toFixed(1).replace(".",",");
   var pw = Math.round(taxa * 100);
   var metaLabel = pw >= 100 ? "&#10003; Meta alcancada" : pw >= 75 ? "~ Proximo da meta" : "Em progresso";
-  var riscoCard = totalRisco > 0
-    ? "<div class=\"kc kc-r visible\">" +
+
+  var riscoCard = "";
+  if (totalRisco > 0) {
+    // Ordenar grupos por valor decrescente
+    var grupos = Object.keys(riscoGrupos).sort(function(a,b){ return riscoGrupos[b] - riscoGrupos[a]; });
+    var listaHTML = grupos.map(function(gr) {
+      var vr = riscoGrupos[gr];
+      var pct_bar = Math.round((vr / totalRisco) * 100);
+      var label = gr.length > 18 ? gr.slice(0,16) + "\u2026" : gr;
+      return "<div class=\"krl-item\">" +
+               "<div class=\"krl-top\">" +
+                 "<span class=\"krl-nome\">" + label + "</span>" +
+                 "<span class=\"krl-val\">R$ " + (vr/1e6).toFixed(2).replace(".",",") + "M</span>" +
+               "</div>" +
+               "<div class=\"krl-bar\"><div class=\"krl-barf\" style=\"width:" + pct_bar + "%\"></div></div>" +
+             "</div>";
+    }).join("");
+    riscoCard =
+      "<div class=\"kc kc-r visible\">" +
         "<div class=\"ke\">Em Risco</div>" +
         "<div class=\"ku\">R$ milhoes</div>" +
         "<div class=\"kv\" style=\"color:#B91C1C\">" + fmt(totalRisco) + "</div>" +
         "<div class=\"ksb\">" + pct(totalRisco,tot) + " da carteira</div>" +
         "<div class=\"kbd kbd-r\">&#9888; Atencao</div>" +
-      "</div>"
-    : "<div class=\"kc kc-r\"></div>";
+        "<div class=\"krl\">" + listaHTML + "</div>" +
+      "</div>";
+  } else {
+    riscoCard = "<div class=\"kc kc-r\"></div>";
+  }
   g.innerHTML =
     "<div class=\"kc kc-h\">" +
       "<div class=\"ke\">Total Previsto</div>" +
