@@ -96,7 +96,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
 .sht{font-size:13px;font-weight:700;color:var(--t1);letter-spacing:-.2px}
 .shs{font-size:11px;color:var(--t3)}
 .shl{flex:1;height:1px;background:var(--dv)}
-.kg{display:grid;grid-template-columns:1.35fr 1fr 1fr 1fr;gap:12px;margin-bottom:18px}
+.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:18px}
 .kc{background:var(--sf);border-radius:var(--rl);padding:17px 17px 14px;
   box-shadow:var(--shc);border:1px solid var(--bdl);position:relative;overflow:hidden;
   cursor:default;transition:transform .24s cubic-bezier(.22,.68,0,1.2),box-shadow .24s;
@@ -120,6 +120,10 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
 .kbd-p{background:var(--pgb);color:var(--pg);border:1px solid var(--pgr)}
 .kbd-a{background:var(--abb);color:var(--ab);border:1px solid var(--abr)}
 .kbd-f{background:var(--ftb);color:var(--ft);border:1px solid var(--ftr)}
+.kc-r::before{background:linear-gradient(90deg,#C0392B,#E74C3C)}
+.kbd-r{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
+.kc-r{display:none}
+.kc-r.visible{display:block}
 .kbar{margin-top:10px;height:3px;background:var(--bd);border-radius:99px;overflow:hidden}
 .kbf{height:100%;border-radius:99px;transition:width .9s cubic-bezier(.22,.68,0,1.2)}
 .card{background:var(--sf);border-radius:var(--rl);border:1px solid var(--bdl);
@@ -196,8 +200,9 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
 .kc{animation:fu .32s ease both}
 .kc:nth-child(1){animation-delay:.04s}.kc:nth-child(2){animation-delay:.08s}
 .kc:nth-child(3){animation-delay:.11s}.kc:nth-child(4){animation-delay:.14s}
-@media(max-width:1080px){.kg{grid-template-columns:1fr 1fr}.g2,.g3c{grid-template-columns:1fr}}
-@media(max-width:720px){.cnt{padding:12px}.kg{grid-template-columns:1fr}}
+.kc:nth-child(5){animation-delay:.17s}
+@media(max-width:1080px){.kg{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}.g2,.g3c{grid-template-columns:1fr}}
+@media(max-width:720px){.cnt{padding:12px}.kg{grid-template-columns:1fr 1fr}}
 
 /* ── Matriz dinâmica: controles de nível ──────────────────────────────── */
 .gt-toolbar {
@@ -1014,15 +1019,16 @@ function populateSels() {
 // ── RENDER PRINCIPAL ──────────────────────────────────────────────────────
 function render() {
   var data = applyF();
-  var tot = 0, p = 0, a = 0, f = 0, nfs = data.length, nfp = 0;
+  var tot = 0, p = 0, a = 0, f = 0, nfs = data.length, nfp = 0, totalRisco = 0;
   data.forEach(function(r) {
     tot += r.VL_FAT;
     if      (r.STATUS === "PAGO")       { p += r.VL_FAT; nfp++; }
     else if (r.STATUS === "EM ABERTO")    a += r.VL_FAT;
     else                                  f += r.VL_FAT;
+    if (r.NIVEL_RISCO === "alto" && r.VL_RISCO > 0) totalRisco += r.VL_RISCO;
   });
   var taxa = tot > 0 ? p / tot : 0;
-  rKPI(tot, p, a, f, nfs, nfp, taxa);
+  rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco);
   rGrupo(data);
   rMonthly(data);
   rDonut(p, a, f, tot);
@@ -1032,14 +1038,23 @@ function render() {
 }
 
 // ── KPIs ──────────────────────────────────────────────────────────────────
-function rKPI(tot, p, a, f, nfs, nfp, taxa) {
+function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco) {
   var g = document.getElementById("kg"); if (!g) return;
   var tp = (taxa*100).toFixed(1).replace(".",",");
   var pw = Math.round(taxa * 100);
   var metaLabel = pw >= 100 ? "&#10003; Meta alcancada" : pw >= 75 ? "~ Proximo da meta" : "Em progresso";
+  var riscoCard = totalRisco > 0
+    ? "<div class=\"kc kc-r visible\">" +
+        "<div class=\"ke\">Em Risco</div>" +
+        "<div class=\"ku\">R$ milhoes</div>" +
+        "<div class=\"kv\" style=\"color:#B91C1C\">" + fmt(totalRisco) + "</div>" +
+        "<div class=\"ksb\">" + pct(totalRisco,tot) + " da carteira</div>" +
+        "<div class=\"kbd kbd-r\">&#9888; Atencao</div>" +
+      "</div>"
+    : "<div class=\"kc kc-r\"></div>";
   g.innerHTML =
     "<div class=\"kc kc-h\">" +
-      "<div class=\"ke\">Total Previsto <span style=\"color:var(--az);font-weight:700\">" + nfs + " NFs</span></div>" +
+      "<div class=\"ke\">Total Previsto</div>" +
       "<div class=\"ku\">R$ milhoes</div>" +
       "<div class=\"kv\">" + fmt(tot) + "</div>" +
       "<div class=\"ksb\">Taxa de recebimento " + tp + "%</div>" +
@@ -1066,7 +1081,8 @@ function rKPI(tot, p, a, f, nfs, nfp, taxa) {
       "<div class=\"kv\">" + fmt(f) + "</div>" +
       "<div class=\"ksb\">" + pct(f,tot) + " da carteira</div>" +
       "<div class=\"kbd kbd-f\">Pipeline</div>" +
-    "</div>";
+    "</div>" +
+    riscoCard;
 }
 
 // ── TABELA GRUPO ──────────────────────────────────────────────────────────
