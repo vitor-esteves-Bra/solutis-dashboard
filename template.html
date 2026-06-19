@@ -1067,7 +1067,7 @@ function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos) {
       return "<div class=\"krl-item\">" +
                "<div class=\"krl-top\">" +
                  "<span class=\"krl-nome\">" + label + "</span>" +
-                 "<span class=\"krl-val\">R$ " + (vr/1e6).toFixed(2).replace(".",",") + "M</span>" +
+                 "<span class=\"krl-val\">" + (vr >= 1e6 ? (vr/1e6).toFixed(2).replace(".",",") + "M" : Math.round(vr/1e3) + " K") + "</span>" +
                "</div>" +
                "<div class=\"krl-bar\"><div class=\"krl-barf\" style=\"width:" + pct_bar + "%\"></div></div>" +
              "</div>";
@@ -1287,10 +1287,10 @@ function renderMensal(thead, tbody, grupos, gMap, cMap, mesMap, mesCols, mesFlag
     if (f.a) h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px\">Ab.</th>";
     if (f.f) h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px\">Fat.</th>";
   });
-  if (hasPago) h2 += "<th class=\"sp wks\" style=\"padding:4px 6px;font-size:13px\">Pago</th>";
-  if (hasAb)   h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px\">Ab.</th>";
-  if (hasFat)  h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px\">Fat.</th>";
-  h2 += "<th class=\"vth\" style=\"padding:4px 6px;font-size:13px;color:var(--az);font-weight:700;text-transform:uppercase\">Total</th></tr>";
+  if (hasPago) h2 += "<th class=\"sp wks\" style=\"padding:4px 6px;font-size:13px;color:#999\">Pago</th>";
+  if (hasAb)   h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px;color:#999\">Ab.</th>";
+  if (hasFat)  h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px;color:#999\">Fat.</th>";
+  h2 += "<th class=\"vth\" style=\"padding:4px 6px;font-size:13px;color:#999;font-weight:700;text-transform:uppercase\">Total</th></tr>";
   thead.innerHTML = h1 + h2;
 
   // ── Linhas ────────────────────────────────────────────────────────────
@@ -1416,10 +1416,10 @@ function renderSemanal(thead, tbody, grupos, gMap, cMap, sems, wkFlags, hasPago,
     if (f.a) h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px\">Ab.</th>";
     if (f.f) h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px\">Fat.</th>";
   });
-  if (hasPago) h2 += "<th class=\"sp wks\" style=\"padding:4px 6px;font-size:13px\">Pago</th>";
-  if (hasAb)   h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px\">Ab.</th>";
-  if (hasFat)  h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px\">Fat.</th>";
-  h2 += "<th class=\"vth\" style=\"padding:4px 6px;font-size:13px;color:var(--az);font-weight:700;text-transform:uppercase\">Total</th></tr>";
+  if (hasPago) h2 += "<th class=\"sp wks\" style=\"padding:4px 6px;font-size:13px;color:#999\">Pago</th>";
+  if (hasAb)   h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px;color:#999\">Ab.</th>";
+  if (hasFat)  h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px;color:#999\">Fat.</th>";
+  h2 += "<th class=\"vth\" style=\"padding:4px 6px;font-size:13px;color:#999;font-weight:700;text-transform:uppercase\">Total</th></tr>";
   thead.innerHTML = h1 + h2;
 
   var gtP=0,gtA=0,gtF=0;
