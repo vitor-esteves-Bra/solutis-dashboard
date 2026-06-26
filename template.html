@@ -104,7 +104,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
 .kc:hover{box-shadow:0 10px 28px rgba(51,117,190,.14),0 3px 8px rgba(0,0,0,.06);will-change:transform;transform:translateY(-3px) scale(1.015)}
 .kc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
   border-radius:var(--rl) var(--rl) 0 0}
-.kc-h::before{background:linear-gradient(90deg,var(--azd),var(--azl))}
+.kc-br{order:-1}.kc-br::before{background:linear-gradient(90deg,#0F4C75,#1B6CA8)}.kbd-br{background:#EFF6FF;color:#1E40AF;border:1px solid #BFDBFE}.kc-h::before{background:linear-gradient(90deg,var(--azd),var(--azl))}
 .kc-p::before{background:var(--pg)}
 .kc-a::before{background:var(--am)}
 .kc-f::before{background:var(--ft)}
@@ -1040,7 +1040,23 @@ function render() {
     }
   });
   var taxa = tot > 0 ? p / tot : 0;
-  rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos);
+  // BR filtrado: soma meses disponíveis no BR_HISTORICO que passam hasMes() + filtros
+  var totalBR = 0; var mesesBR = [];
+  Object.keys(BR_HISTORICO).sort().forEach(function(mes) {
+    if (!hasMes(mes)) return;
+    var registros = BR_HISTORICO[mes];
+    var vlMes = 0;
+    registros.forEach(function(r) {
+      var grpUp = (r.GRP  || "").toUpperCase();
+      if (F.grp  !== "all" && grpUp  !== F.grp.toUpperCase())  return;
+      if (F.bu   !== "all" && r.BU   !== F.bu)                 return;
+      if (F.dir  !== "all" && r.OP   !== F.dir)                return;
+      if (F.exec !== "all" && r.EXEC !== F.exec)               return;
+      vlMes += r.VL;
+    });
+    if (vlMes > 0) { totalBR += vlMes; mesesBR.push(mes); }
+  });
+  rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, mesesBR);
   rGrupo(data);
   rMonthly(data);
   rDonut(p, a, f, tot);
@@ -1050,7 +1066,7 @@ function render() {
 }
 
 // ── KPIs ──────────────────────────────────────────────────────────────────
-function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos) {
+function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, mesesBR) {
   var g = document.getElementById("kg"); if (!g) return;
   var tp = (taxa*100).toFixed(1).replace(".",",");
   var pw = Math.round(taxa * 100);
@@ -1085,15 +1101,42 @@ function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos) {
     riscoCard = "<div class=\"kc kc-r\"></div>";
   }
   var cards = "";
-  if (tot > 0) cards +=
-    "<div class=\"kc kc-h\">" +
-      "<div class=\"ke\">Total Previsto</div>" +
-      "<div class=\"ku\">R$ milhoes</div>" +
-      "<div class=\"kv\">" + fmt(tot) + "</div>" +
-      "<div class=\"ksb\">Taxa de recebimento " + tp + "%</div>" +
-      "<div class=\"kbar\"><div class=\"kbf\" style=\"width:" + pw + "%;background:linear-gradient(90deg,var(--azd),var(--azl))\"></div></div>" +
-      "<div class=\"kbd kbd-n\">" + tp + "% recebido</div>" +
-    "</div>";
+  // Card Business Review
+  if (totalBR > 0) {
+    var brLabel = mesesBR.map(function(m){ var p=m.split("-"); return (MES_NOME[p[1]]||p[1])+"/"+p[0].slice(2); }).join(", ");
+    var brDelta = tot > 0 ? ((tot - totalBR) / totalBR * 100) : 0;
+    var brDeltaStr = (brDelta >= 0 ? "+" : "") + brDelta.toFixed(1).replace(".",",") + "%";
+    var brDeltaColor = brDelta >= 0 ? "#059669" : "#DC2626";
+    var brDeltaIcon  = brDelta >= 0 ? "&#9650;" : "&#9660;";
+    cards +=
+      "<div class=\"kc kc-br\">" +
+        "<div class=\"ke\">Business Review</div>" +
+        "<div class=\"ku\">R$ milhoes</div>" +
+        "<div class=\"kv\">" + fmt(totalBR) + "</div>" +
+        "<div class=\"ksb\">Meta definida — " + brLabel + "</div>" +
+        "<div class=\"kbd kbd-br\">Meta " + brLabel + "</div>" +
+      "</div>";
+  }
+  // Card Carteira Atual (antigo Total Previsto)
+  if (tot > 0) {
+    var deltaVsBR = "";
+    if (totalBR > 0) {
+      var d2 = ((tot - totalBR) / totalBR * 100);
+      var d2str = (d2 >= 0 ? "+" : "") + d2.toFixed(1).replace(".",",") + "%";
+      var d2col = d2 >= 0 ? "#059669" : "#DC2626";
+      var d2icon = d2 >= 0 ? "&#9650;" : "&#9660;";
+      deltaVsBR = " <span style=\"color:" + d2col + ";font-size:10px;font-weight:700\">" + d2icon + " " + d2str + " vs BR</span>";
+    }
+    cards +=
+      "<div class=\"kc kc-h\">" +
+        "<div class=\"ke\">Carteira Atual" + deltaVsBR + "</div>" +
+        "<div class=\"ku\">R$ milhoes</div>" +
+        "<div class=\"kv\">" + fmt(tot) + "</div>" +
+        "<div class=\"ksb\">Taxa de recebimento " + tp + "%</div>" +
+        "<div class=\"kbar\"><div class=\"kbf\" style=\"width:" + pw + "%;background:linear-gradient(90deg,var(--azd),var(--azl))\"></div></div>" +
+        "<div class=\"kbd kbd-n\">" + tp + "% recebido</div>" +
+      "</div>";
+  }
   if (p > 0) cards +=
     "<div class=\"kc kc-p\">" +
       "<div class=\"ke\">Ja Recebido</div>" +
