@@ -1084,7 +1084,8 @@ function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos) {
   } else {
     riscoCard = "<div class=\"kc kc-r\"></div>";
   }
-  g.innerHTML =
+  var cards = "";
+  if (tot > 0) cards +=
     "<div class=\"kc kc-h\">" +
       "<div class=\"ke\">Total Previsto</div>" +
       "<div class=\"ku\">R$ milhoes</div>" +
@@ -1092,29 +1093,33 @@ function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos) {
       "<div class=\"ksb\">Taxa de recebimento " + tp + "%</div>" +
       "<div class=\"kbar\"><div class=\"kbf\" style=\"width:" + pw + "%;background:linear-gradient(90deg,var(--azd),var(--azl))\"></div></div>" +
       "<div class=\"kbd kbd-n\">" + tp + "% recebido</div>" +
-    "</div>" +
+    "</div>";
+  if (p > 0) cards +=
     "<div class=\"kc kc-p\">" +
       "<div class=\"ke\">Ja Recebido</div>" +
       "<div class=\"ku\">R$ milhoes</div>" +
       "<div class=\"kv\">" + fmt(p) + "</div>" +
       "<div class=\"ksb\">" + pct(p,tot) + " do total</div>" +
       "<div class=\"kbd kbd-p\">" + metaLabel + "</div>" +
-    "</div>" +
+    "</div>";
+  if (a > 0) cards +=
     "<div class=\"kc kc-a\">" +
       "<div class=\"ke\">Em Aberto</div>" +
       "<div class=\"ku\">R$ milhoes</div>" +
       "<div class=\"kv\">" + fmt(a) + "</div>" +
       "<div class=\"ksb\">" + pct(a,tot) + " da carteira</div>" +
       "<div class=\"kbd kbd-a\">Em Aberto</div>" +
-    "</div>" +
+    "</div>";
+  if (f > 0) cards +=
     "<div class=\"kc kc-f\">" +
       "<div class=\"ke\">A Faturar</div>" +
       "<div class=\"ku\">R$ milhoes</div>" +
       "<div class=\"kv\">" + fmt(f) + "</div>" +
       "<div class=\"ksb\">" + pct(f,tot) + " da carteira</div>" +
       "<div class=\"kbd kbd-f\">Pipeline</div>" +
-    "</div>" +
-    riscoCard;
+    "</div>";
+  if (totalRisco > 0) cards += riscoCard;
+  g.innerHTML = cards;
 }
 
 // ── TABELA GRUPO ──────────────────────────────────────────────────────────
