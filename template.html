@@ -165,7 +165,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
 .gt{width:100%;border-collapse:collapse;font-size:13px}
 .gt th{padding:6px 9px;font-size:11px;font-weight:700;text-transform:uppercase;
   letter-spacing:.5px;color:var(--t3);border-bottom:2px solid var(--dv);
-  white-space:normal;word-break:break-word;background:var(--sf);text-align:center}
+  white-space:normal;overflow-wrap:normal;background:var(--sf);text-align:center}
 .gt th.tl{text-align:left}
 .gt td{padding:8px 9px;border-bottom:1px solid var(--bdl);vertical-align:middle;
   font-variant-numeric:tabular-nums;font-size:13px}
@@ -1331,13 +1331,13 @@ function renderMensal(thead, tbody, grupos, gMap, cMap, mesMap, mesCols, mesFlag
   var h2 = "<tr><th class=\"tl\"></th>";
   mesCols.forEach(function(mo) {
     var f = mesFlagsMap[mo];
-    if (f.p) h2 += "<th class=\"sp wks\" style=\"padding:4px 6px;font-size:13px\">PG</th>";
-    if (f.a) h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px\">Em Aberto</th>";
-    if (f.f) h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px\">A Faturar</th>";
+    if (f.p) h2 += "<th class=\"sp wks\" style=\"padding:4px 6px;font-size:13px;min-width:28px\">PG</th>";
+    if (f.a) h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px;min-width:42px\">Em Aberto</th>";
+    if (f.f) h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px;min-width:42px\">A Faturar</th>";
   });
-  if (hasPago) h2 += "<th class=\"sp wks\" style=\"padding:4px 6px;font-size:13px;color:#999\">PG</th>";
-  if (hasAb)   h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px;color:#999\">Em Aberto</th>";
-  if (hasFat)  h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px;color:#999\">A Faturar</th>";
+  if (hasPago) h2 += "<th class=\"sp wks\" style=\"padding:4px 6px;font-size:13px;color:#999;min-width:28px\">PG</th>";
+  if (hasAb)   h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px;color:#999;min-width:42px\">Em Aberto</th>";
+  if (hasFat)  h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px;color:#999;min-width:42px\">A Faturar</th>";
   h2 += "<th class=\"vth\" style=\"padding:4px 6px;font-size:13px;color:#999;font-weight:700;text-transform:uppercase\">Total</th></tr>";
   thead.innerHTML = h1 + h2;
 
@@ -1460,13 +1460,13 @@ function renderSemanal(thead, tbody, grupos, gMap, cMap, sems, wkFlags, hasPago,
   sems.forEach(function(s) {
     var f = wkFlags[s];
     if (!f.p&&!f.a&&!f.f) return;
-    if (f.p) h2 += "<th class=\"sp wks\" style=\"padding:4px 6px;font-size:13px\">PG</th>";
-    if (f.a) h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px\">Em Aberto</th>";
-    if (f.f) h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px\">A Faturar</th>";
+    if (f.p) h2 += "<th class=\"sp wks\" style=\"padding:4px 6px;font-size:13px;min-width:28px\">PG</th>";
+    if (f.a) h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px;min-width:42px\">Em Aberto</th>";
+    if (f.f) h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px;min-width:42px\">A Faturar</th>";
   });
-  if (hasPago) h2 += "<th class=\"sp wks\" style=\"padding:4px 6px;font-size:13px;color:#999\">PG</th>";
-  if (hasAb)   h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px;color:#999\">Em Aberto</th>";
-  if (hasFat)  h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px;color:#999\">A Faturar</th>";
+  if (hasPago) h2 += "<th class=\"sp wks\" style=\"padding:4px 6px;font-size:13px;color:#999;min-width:28px\">PG</th>";
+  if (hasAb)   h2 += "<th class=\"sa\" style=\"padding:4px 6px;font-size:13px;color:#999;min-width:42px\">Em Aberto</th>";
+  if (hasFat)  h2 += "<th class=\"sf3\" style=\"padding:4px 6px;font-size:13px;color:#999;min-width:42px\">A Faturar</th>";
   h2 += "<th class=\"vth\" style=\"padding:4px 6px;font-size:13px;color:#999;font-weight:700;text-transform:uppercase\">Total</th></tr>";
   thead.innerHTML = h1 + h2;
 
