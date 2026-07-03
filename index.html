@@ -2071,23 +2071,61 @@ function showToast(msg, type) {
   _toastTimer = setTimeout(function() { t.className = ''; }, 2800);
 }
 
-/* --- Captura do card (html-to-image, 3x DPI) ----------------------------- */
+/* --- Captura do card (html-to-image, 3x DPI, conteúdo completo) ---------- */
 function captureCard(cardId, callback) {
   var el = document.getElementById(cardId);
   if (!el) { showToast('Card não encontrado', 'err'); return; }
-  // Esconde o menu durante a captura
+
+  // 1. Esconde menus
   var menus = el.querySelectorAll('.card-menu');
   menus.forEach(function(m){ m.style.opacity = '0'; m.style.pointerEvents = 'none'; });
-  var opts = { pixelRatio: 3, cacheBust: true, backgroundColor: '#ffffff' };
+
+  // 2. Expande todos os scrollers internos para capturar conteúdo completo
+  var scrollers = el.querySelectorAll('[style*="overflow"]');
+  var saved = [];
+  scrollers.forEach(function(s) {
+    saved.push({ el: s, ov: s.style.overflow, ovX: s.style.overflowX, ovY: s.style.overflowY,
+                 h: s.style.height, maxH: s.style.maxHeight });
+    s.style.overflow  = 'visible';
+    s.style.overflowX = 'visible';
+    s.style.overflowY = 'visible';
+    s.style.height    = 'auto';
+    s.style.maxHeight = 'none';
+  });
+  // Expande também o próprio card se tiver overflow:hidden
+  var elOv = el.style.overflow;
+  el.style.overflow = 'visible';
+
+  // 3. Captura com dimensões reais do conteúdo
+  var opts = {
+    pixelRatio: 3,
+    cacheBust: true,
+    backgroundColor: '#ffffff',
+    width:  el.scrollWidth,
+    height: el.scrollHeight
+  };
+
   htmlToImage.toPng(el, opts)
     .then(function(dataUrl) {
-      menus.forEach(function(m){ m.style.opacity = ''; m.style.pointerEvents = ''; });
+      restore();
       callback(null, dataUrl);
     })
     .catch(function(err) {
-      menus.forEach(function(m){ m.style.opacity = ''; m.style.pointerEvents = ''; });
+      restore();
       callback(err, null);
     });
+
+  function restore() {
+    el.style.overflow = elOv;
+    saved.forEach(function(s) {
+      s.el.style.overflow  = s.ov;
+      s.el.style.overflowX = s.ovX;
+      s.el.style.overflowY = s.ovY;
+      s.el.style.height    = s.h;
+      s.el.style.maxHeight = s.maxH;
+    });
+    menus.forEach(function(m){ m.style.opacity = ''; m.style.pointerEvents = ''; });
+  }
 }
 
 /* --- Download PNG -------------------------------------------------------- */
@@ -2124,21 +2162,29 @@ function copyCardImg(cardId) {
   });
 }
 
-/* --- Expandir card (fullscreen overlay) ---------------------------------- */
+/* --- Expandir card (fullscreen overlay via imagem) ----------------------- */
 function expandCard(cardId) {
   var el = document.getElementById(cardId);
   if (!el) return;
   var overlay = document.getElementById('card-fs-overlay');
-  var inner   = document.getElementById('card-fs-inner');
   var content = document.getElementById('card-fs-content');
   if (!overlay || !content) return;
-  var clone = el.cloneNode(true);
-  // Remove menus do clone
-  clone.querySelectorAll('.card-menu').forEach(function(m){ m.remove(); });
-  clone.style.cssText = 'margin:0;box-shadow:none;border-radius:0';
-  content.innerHTML = '';
-  content.appendChild(clone);
-  overlay.classList.add('on');
+
+  showToast('Carregando...', 'ok');
+  captureCard(cardId, function(err, dataUrl) {
+    if (err) { showToast('Erro ao expandir card', 'err'); return; }
+    content.innerHTML = '';
+    var img = document.createElement('img');
+    img.src = dataUrl;
+    img.style.cssText = 'max-width:100%;height:auto;display:block;border-radius:8px;';
+    content.appendChild(img);
+    overlay.classList.add('on');
+    showToast('Expandido — ESC para fechar', 'ok');
+  });
+}
+function closeFsOverlay() {
+  var o = document.getElementById('card-fs-overlay');
+  if (o) o.classList.remove('on');
 }
 function closeFsOverlay() {
   var o = document.getElementById('card-fs-overlay');
