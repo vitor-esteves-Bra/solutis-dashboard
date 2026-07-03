@@ -8,6 +8,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Solutis · Recebimentos 2026</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -540,6 +541,69 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
   .hd-t2 { display: none; }
 }
 
+
+/* ── PRESENTATION MODE ──────────────────────────────────────────────────── */
+body.pm .sb, body.pm .sbtg, body.pm .hbadge, body.pm .upbtn,
+body.pm #fi, body.pm .mob-toggle { display:none !important; }
+body.pm .layout { margin-left:0 !important; }
+body.pm .main   { padding:20px 32px !important; }
+body.pm .hdr    { padding:0 32px !important; }
+body.pm .card   { margin-bottom:20px; }
+#btn-pm {
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);
+  color:#fff;border-radius:6px;padding:5px 11px;font-size:11.5px;font-weight:600;
+  cursor:pointer;transition:background .15s;white-space:nowrap;
+}
+#btn-pm:hover { background:rgba(255,255,255,.22); }
+#btn-pm svg   { flex-shrink:0; }
+body.pm #btn-pm { background:rgba(255,255,255,.28); }
+
+/* ── CARD EXPORT MENU ───────────────────────────────────────────────────── */
+.card { position:relative; }
+.card-menu {
+  position:absolute;top:10px;right:10px;z-index:10;
+  display:flex;gap:4px;
+  opacity:0;pointer-events:none;transition:opacity .18s;
+}
+.card:hover .card-menu { opacity:1;pointer-events:auto; }
+.card-menu-btn {
+  background:var(--sf);border:1px solid var(--bd);border-radius:6px;
+  padding:4px 7px;font-size:11px;color:var(--t2);cursor:pointer;
+  display:flex;align-items:center;gap:4px;white-space:nowrap;
+  transition:background .12s,box-shadow .12s;box-shadow:0 1px 4px rgba(0,0,0,.08);
+}
+.card-menu-btn:hover { background:var(--azp);color:var(--azd);border-color:var(--azl); }
+.card-menu-btn svg  { flex-shrink:0; }
+body.pm .card-menu  { display:none !important; }
+
+/* ── TOAST ──────────────────────────────────────────────────────────────── */
+#toast {
+  position:fixed;bottom:28px;right:28px;z-index:9999;
+  background:#1A202C;color:#fff;border-radius:8px;
+  padding:10px 18px;font-size:13px;font-weight:500;
+  box-shadow:0 4px 18px rgba(0,0,0,.22);
+  display:flex;align-items:center;gap:8px;
+  opacity:0;transform:translateY(12px);
+  transition:opacity .22s,transform .22s;pointer-events:none;
+}
+#toast.on { opacity:1;transform:translateY(0); }
+#toast.ok  { border-left:4px solid #0E9F6E; }
+#toast.err { border-left:4px solid #E53E3E; }
+
+/* ── FULLSCREEN CARD ────────────────────────────────────────────────────── */
+.card-fs-overlay {
+  position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,.55);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.card-fs-overlay.on { opacity:1;pointer-events:auto; }
+.card-fs-inner {
+  background:var(--sf);border-radius:var(--rl);
+  box-shadow:0 8px 48px rgba(0,0,0,.32);
+  padding:24px;max-width:92vw;max-height:92vh;overflow:auto;
+  min-width:560px;
+}
 </style>
 </head>
 <body>
@@ -590,6 +654,19 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
     </button>
     <input type="file" id="fi" accept=".json">
   </div>
+    <button id="btn-pm" onclick="togglePM()" title="Presentation Mode (F11)">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      Apresentar
+    </button>
+<div id="toast"></div>
+<div class="card-fs-overlay" id="card-fs-overlay" onclick="closeFsOverlay()">
+  <div class="card-fs-inner" id="card-fs-inner" onclick="event.stopPropagation()">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
+      <button onclick="closeFsOverlay()" style="background:none;border:none;cursor:pointer;color:var(--t2);font-size:18px;line-height:1">&#x2715;</button>
+    </div>
+    <div id="card-fs-content"></div>
+  </div>
+</div>
 </header>
 <button class="sbtg" id="sbtg">
   <svg width="9" height="13" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
@@ -643,7 +720,8 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
       <div><div class="sht">Posicao Detalhada por Grupo de Cliente</div><div class="shs">Valores em R$ &middot; Por semana (segunda-feira) &middot; Prev. Pag.</div></div>
       <div class="shl"></div>
     </div>
-    <div class="card" style="margin-bottom:16px;overflow:hidden">
+    <div class="card" id="card_receb_grupo" style="margin-bottom:16px;overflow:hidden">
+      <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_receb_grupo','Recebimentos_por_Grupo')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_receb_grupo')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button><button class="card-menu-btn" onclick="expandCard('card_receb_grupo')" title="Expandir"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>Expandir</button></div>
       <div class="ch">
         <div><div class="ct">Recebimentos por Grupo de Cliente</div>
              <div class="csb">Clique no grupo para expandir &middot; Colunas sem valores sao ocultadas automaticamente</div></div>
@@ -656,7 +734,8 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
       <div><div class="sht">Meta Mensal &middot; Pago x Business Review</div><div class="shs">Valores em R$ &middot; Comparativo do mes selecionado &middot; Respeita filtros ativos</div></div>
       <div class="shl"></div>
     </div>
-    <div class="card" style="margin-bottom:16px">
+    <div class="card" id="card_meta" style="margin-bottom:16px">
+      <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_meta','Atingimento_da_Meta')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_meta')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button><button class="card-menu-btn" onclick="expandCard('card_meta')" title="Expandir"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>Expandir</button></div>
       <div class="ch">
         <div><div class="ct">Atingimento da Meta</div>
              <div class="csb">Recebido (status PAGO, posicao atual do dashboard) vs. Business Review do mes selecionado</div></div>
@@ -683,11 +762,13 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
       <div class="shl"></div>
     </div>
     <div class="g3c">
-      <div class="card">
+      <div class="card" id="card_mensal">
+      <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_mensal','Recebimento_Mensal')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_mensal')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button><button class="card-menu-btn" onclick="expandCard('card_mensal')" title="Expandir"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>Expandir</button></div>>
         <div class="ch"><div><div class="ct">Recebimento Mensal</div><div class="csb">Por status</div></div></div>
         <div style="position:relative;height:215px"><canvas id="ch-mo"></canvas></div>
       </div>
-      <div class="card">
+      <div class="card" id="card_carteira">
+      <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_carteira','Composicao_da_Carteira')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_carteira')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button><button class="card-menu-btn" onclick="expandCard('card_carteira')" title="Expandir"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>Expandir</button></div>>
         <div class="ch"><div><div class="ct">Composicao da Carteira</div><div class="csb">Por status</div></div></div>
         <div style="display:flex;align-items:center;justify-content:center">
           <div style="position:relative;height:175px;max-width:175px;margin:0 auto"><canvas id="ch-do"></canvas></div>
@@ -700,7 +781,8 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
       <div><div class="sht">Carteira por Diretoria de Operacoes</div><div class="shs">Valores em R$</div></div>
       <div class="shl"></div>
     </div>
-    <div class="card" style="margin-bottom:16px">
+    <div class="card" id="card_operacao" style="margin-bottom:16px">
+      <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_operacao','Desempenho_por_Operacao')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_operacao')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button><button class="card-menu-btn" onclick="expandCard('card_operacao')" title="Expandir"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>Expandir</button></div>
       <div class="ch"><div><div class="ct">Desempenho por Operacao</div><div class="csb">Pago &middot; Em Aberto &middot; A Faturar</div></div></div>
       <div style="position:relative;height:160px;margin-bottom:14px"><canvas id="ch-op"></canvas></div>
       <div style="overflow-x:auto">
@@ -715,7 +797,8 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
       <div><div class="sht">Prazo Medio de Recebimento por Cliente</div><div class="shs">Dias entre Mes de Servico e Prev. Pagamento</div></div>
       <div class="shl"></div>
     </div>
-    <div class="card" style="margin-bottom:32px">
+    <div class="card" id="card_pmr" style="margin-bottom:32px">
+      <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_pmr','PMR_por_Grupo')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_pmr')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button><button class="card-menu-btn" onclick="expandCard('card_pmr')" title="Expandir"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>Expandir</button></div>
       <div class="ch"><div><div class="ct">PMR por Grupo de Cliente</div>
         <div class="csb">Prazo medio contratual &middot; Bradesco e Santander fixados em 30 dias</div></div></div>
       <div style="overflow-x:auto">
@@ -1986,6 +2069,144 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 });
+
+
+// ══════════════════════════════════════════════════════════════════════════
+//  MÓDULO: PRESENTATION MODE + CARD EXPORT
+//  Funções: togglePM, exportCardPng, copyCardImg, expandCard, showToast
+// ══════════════════════════════════════════════════════════════════════════
+
+/* --- Toast helper -------------------------------------------------------- */
+var _toastTimer = null;
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = '';
+  var icon = document.createElement('span');
+  icon.textContent = type === 'ok' ? '✓' : '✗';
+  icon.style.cssText = 'font-weight:700;font-size:15px';
+  t.appendChild(icon);
+  t.appendChild(document.createTextNode(' ' + msg));
+  t.className = 'on ' + (type || 'ok');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function() { t.className = ''; }, 2800);
+}
+
+/* --- Captura do card (html-to-image, 3x DPI) ----------------------------- */
+function captureCard(cardId, callback) {
+  var el = document.getElementById(cardId);
+  if (!el) { showToast('Card não encontrado', 'err'); return; }
+  // Esconde o menu durante a captura
+  var menus = el.querySelectorAll('.card-menu');
+  menus.forEach(function(m){ m.style.opacity = '0'; m.style.pointerEvents = 'none'; });
+  var opts = { pixelRatio: 3, cacheBust: true, backgroundColor: '#ffffff' };
+  htmlToImage.toPng(el, opts)
+    .then(function(dataUrl) {
+      menus.forEach(function(m){ m.style.opacity = ''; m.style.pointerEvents = ''; });
+      callback(null, dataUrl);
+    })
+    .catch(function(err) {
+      menus.forEach(function(m){ m.style.opacity = ''; m.style.pointerEvents = ''; });
+      callback(err, null);
+    });
+}
+
+/* --- Download PNG -------------------------------------------------------- */
+function exportCardPng(cardId, slug) {
+  showToast('Gerando PNG...', 'ok');
+  var mes = (document.getElementById('sel-mes') || {}).value || '';
+  var suffix = mes ? '_' + mes : '';
+  var filename = slug + suffix + '.png';
+  captureCard(cardId, function(err, dataUrl) {
+    if (err) { showToast('Erro ao gerar PNG', 'err'); return; }
+    var a = document.createElement('a');
+    a.href = dataUrl; a.download = filename; a.click();
+    showToast('PNG salvo: ' + filename, 'ok');
+  });
+}
+
+/* --- Copiar para clipboard ----------------------------------------------- */
+function copyCardImg(cardId) {
+  if (!navigator.clipboard || !window.ClipboardItem) {
+    showToast('Clipboard não suportado neste navegador', 'err'); return;
+  }
+  showToast('Copiando...', 'ok');
+  captureCard(cardId, function(err, dataUrl) {
+    if (err) { showToast('Erro ao capturar card', 'err'); return; }
+    fetch(dataUrl)
+      .then(function(res){ return res.blob(); })
+      .then(function(blob) {
+        return navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ]);
+      })
+      .then(function() { showToast('✓ Imagem copiada — use Ctrl+V', 'ok'); })
+      .catch(function() { showToast('Erro ao copiar para clipboard', 'err'); });
+  });
+}
+
+/* --- Expandir card (fullscreen overlay) ---------------------------------- */
+function expandCard(cardId) {
+  var el = document.getElementById(cardId);
+  if (!el) return;
+  var overlay = document.getElementById('card-fs-overlay');
+  var inner   = document.getElementById('card-fs-inner');
+  var content = document.getElementById('card-fs-content');
+  if (!overlay || !content) return;
+  var clone = el.cloneNode(true);
+  // Remove menus do clone
+  clone.querySelectorAll('.card-menu').forEach(function(m){ m.remove(); });
+  clone.style.cssText = 'margin:0;box-shadow:none;border-radius:0';
+  content.innerHTML = '';
+  content.appendChild(clone);
+  overlay.classList.add('on');
+}
+function closeFsOverlay() {
+  var o = document.getElementById('card-fs-overlay');
+  if (o) o.classList.remove('on');
+}
+
+/* --- Presentation Mode -------------------------------------------------- */
+function togglePM() {
+  var on = document.body.classList.toggle('pm');
+  var btn = document.getElementById('btn-pm');
+  if (btn) btn.innerHTML = on
+    ? '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg> Sair'
+    : '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Apresentar';
+  showToast(on ? 'Modo apresentação ativado' : 'Modo apresentação desativado', 'ok');
+}
+
+/* --- Atalhos de teclado -------------------------------------------------- */
+document.addEventListener('keydown', function(e) {
+  // F11 → Presentation Mode
+  if (e.key === 'F11') { e.preventDefault(); togglePM(); return; }
+  // ESC → sair do PM ou fechar overlay
+  if (e.key === 'Escape') {
+    var o = document.getElementById('card-fs-overlay');
+    if (o && o.classList.contains('on')) { closeFsOverlay(); return; }
+    if (document.body.classList.contains('pm')) { togglePM(); }
+    return;
+  }
+  if (!e.ctrlKey || !e.shiftKey) return;
+  // CTRL+SHIFT+P → PNG do card em foco (primeiro visível)
+  if (e.key === 'P') {
+    e.preventDefault();
+    var cards = ['card_receb_grupo','card_meta','card_mensal','card_carteira','card_operacao','card_pmr'];
+    if (cards[0]) exportCardPng(cards[0], 'Dashboard_Recebimentos');
+  }
+  // CTRL+SHIFT+C → Copiar primeiro card
+  if (e.key === 'C') {
+    e.preventDefault();
+    copyCardImg('card_receb_grupo');
+  }
+});
+
+// Expor funções globais (IIFE safety)
+window.togglePM       = togglePM;
+window.exportCardPng  = exportCardPng;
+window.copyCardImg    = copyCardImg;
+window.expandCard     = expandCard;
+window.closeFsOverlay = closeFsOverlay;
 
 </script>
 </body>
