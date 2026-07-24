@@ -754,26 +754,6 @@ body.pm .card-menu  { display:none !important; }
       </div>
     </div>
     <div class="sh">
-      <div class="shi"><svg width="14" height="14" fill="none" stroke="var(--az)" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-      <div><div class="sht">Evolucao Mensal</div><div class="shs">Valores em R$ &middot; Jan a Jun/26</div></div>
-      <div class="shl"></div>
-    </div>
-    <div class="g3c">
-      <div class="card" id="card_mensal">
-      <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_mensal','Recebimento_Mensal')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_mensal')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button><button class="card-menu-btn" onclick="expandCard('card_mensal')" title="Expandir"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>Expandir</button></div>>
-        <div class="ch"><div><div class="ct">Recebimento Mensal</div><div class="csb">Por status</div></div></div>
-        <div style="position:relative;height:215px"><canvas id="ch-mo"></canvas></div>
-      </div>
-      <div class="card" id="card_carteira">
-      <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_carteira','Composicao_da_Carteira')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_carteira')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button><button class="card-menu-btn" onclick="expandCard('card_carteira')" title="Expandir"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>Expandir</button></div>>
-        <div class="ch"><div><div class="ct">Composicao da Carteira</div><div class="csb">Por status</div></div></div>
-        <div style="display:flex;align-items:center;justify-content:center">
-          <div style="position:relative;height:175px;max-width:175px;margin:0 auto"><canvas id="ch-do"></canvas></div>
-        </div>
-        <div id="doleg" style="margin-top:8px;display:flex;flex-direction:column;gap:5px"></div>
-      </div>
-    </div>
-    <div class="sh">
       <div class="shi"><svg width="14" height="14" fill="none" stroke="var(--az)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
       <div><div class="sht">Carteira por Diretoria de Operacoes</div><div class="shs">Valores em R$</div></div>
       <div class="shl"></div>
@@ -1139,8 +1119,6 @@ function render() {
   });
   rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, mesesBR);
   rGrupo(data);
-  rMonthly(data);
-  rDonut(p, a, f, tot);
   rOPs(data);
   rPMR(data);
   rBRV();
@@ -1618,61 +1596,6 @@ function renderSemanal(thead, tbody, grupos, gMap, cMap, sems, wkFlags, hasPago,
 
 
 
-// ── MENSAL ────────────────────────────────────────────────────────────────
-function rMonthly(data) {
-  kch("mo");
-  var byM = {};
-  data.forEach(function(r) {
-    if (!byM[r.MES]) byM[r.MES] = {p:0,a:0,f:0};
-    if      (r.STATUS === "PAGO")       byM[r.MES].p += r.VL_FAT;
-    else if (r.STATUS === "EM ABERTO")  byM[r.MES].a += r.VL_FAT;
-    else                                byM[r.MES].f += r.VL_FAT;
-  });
-  var ms  = Object.keys(byM).sort();
-  var ctx = document.getElementById("ch-mo"); if (!ctx) return;
-  var lbl = ms.map(function(m){ var p=m.split("-"); return (MN[p[1]]||p[1])+"/"+p[0].slice(2); });
-  var ds  = [];
-  if (ms.some(function(m){ return byM[m].p>0; })) ds.push({label:"Pago",     data:ms.map(function(m){return byM[m].p;}),backgroundColor:"rgba(14,159,110,.80)",borderRadius:4,borderSkipped:false});
-  if (ms.some(function(m){ return byM[m].a>0; })) ds.push({label:"Em Aberto",data:ms.map(function(m){return byM[m].a;}),backgroundColor:"rgba(217,119,6,.75)", borderRadius:4,borderSkipped:false});
-  if (ms.some(function(m){ return byM[m].f>0; })) ds.push({label:"A Faturar",data:ms.map(function(m){return byM[m].f;}),backgroundColor:"rgba(99,102,241,.70)",borderRadius:4,borderSkipped:false});
-  CH["mo"] = new Chart(ctx, {
-    type:"bar", data:{labels:lbl,datasets:ds},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:"bottom",labels:{padding:11}},tooltip:{callbacks:{label:function(c){return " "+fmt(c.raw);}}}},
-      scales:{x:{stacked:true,grid:{display:false},border:{display:false}},
-              y:{stacked:true,grid:{color:"#EDF2F7"},border:{display:false},ticks:{callback:function(v){return fmt(v);}}}}}
-  });
-}
-
-// ── DONUT ─────────────────────────────────────────────────────────────────
-function rDonut(p, a, f, tot) {
-  kch("do");
-  var ctx = document.getElementById("ch-do"); if (!ctx) return;
-  var lbl=[],vals=[],cols=[];
-  if (p>0){lbl.push("Pago");      vals.push(p); cols.push("#0E9F6E");}
-  if (a>0){lbl.push("Em Aberto"); vals.push(a); cols.push("#D97706");}
-  if (f>0){lbl.push("A Faturar"); vals.push(f); cols.push("#6366F1");}
-  CH["do"] = new Chart(ctx, {
-    type:"doughnut",
-    data:{labels:lbl,datasets:[{data:vals,backgroundColor:cols,borderWidth:3,borderColor:"#fff"}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:"68%",
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return " "+fmt(c.raw)+" ("+pct(c.raw,tot)+")";}}}}
-    }
-  });
-  var leg = document.getElementById("doleg"); if (!leg) return;
-  var items = [];
-  if (p>0) items.push(["Pago",p,"#0E9F6E"]);
-  if (a>0) items.push(["Em Aberto",a,"#D97706"]);
-  if (f>0) items.push(["A Faturar",f,"#6366F1"]);
-  leg.innerHTML = items.map(function(i) {
-    return "<div style=\"display:flex;align-items:center;justify-content:space-between;padding:3px 0\">" +
-      "<div style=\"display:flex;align-items:center;gap:6px\">" +
-      "<div style=\"width:8px;height:8px;border-radius:50%;background:" + i[2] + "\"></div>" +
-      "<span style=\"font-size:11.5px;color:var(--t2)\">" + i[0] + "</span></div>" +
-      "<span style=\"font-size:11.5px;font-weight:600;color:var(--t1)\">" + fmt(i[1]) + "</span></div>";
-  }).join("");
-}
-
 // ── OPs ───────────────────────────────────────────────────────────────────
 function rOPs(data) {
   kch("op");
@@ -1772,6 +1695,12 @@ function atgClass(pct) {
   return "atg-rk";
 }
 
+// Formata diferenca monetaria: negativos entre parenteses, sem sinal de menos.
+function fmtDiff(v) {
+  if (v < 0) return "(" + fmt(Math.abs(v)) + ")";
+  return "+" + fmt(v);
+}
+
 function rBRV() {
   var sh   = document.getElementById("sh_meta");
   var card = document.getElementById("card_meta");
@@ -1802,15 +1731,15 @@ function rBRV() {
         && (F.exec === "all" || exec === F.exec);
   }
 
-  // Arvore Grupo -> Cliente. Fluxo Atual = todos os status (Pago+Aberto+Faturar);
-  // Pago = apenas status PAGO, sinalizado como indicador dentro de cada linha.
+  // Arvore Grupo -> Cliente. Fluxo Atual = todos os status (Pago+Aberto+Faturar),
+  // exibido apenas como referencia. Meta Atingida/Diferenca usam somente Pago.
   var tree = {};
   function ensureNode(gk, gLabel) {
-    if (!tree[gk]) tree[gk] = { label: gLabel, fluxo: 0, pago: 0, br: 0, clientes: {} };
+    if (!tree[gk]) tree[gk] = { label: gLabel, fluxo: 0, pago: 0, aberto: 0, faturar: 0, br: 0, clientes: {} };
     return tree[gk];
   }
   function ensureClient(node, ck, cLabel) {
-    if (!node.clientes[ck]) node.clientes[ck] = { label: cLabel, fluxo: 0, pago: 0, br: 0 };
+    if (!node.clientes[ck]) node.clientes[ck] = { label: cLabel, fluxo: 0, pago: 0, aberto: 0, faturar: 0, br: 0 };
     return node.clientes[ck];
   }
 
@@ -1822,6 +1751,8 @@ function rBRV() {
     var cli  = ensureClient(node, normKey(cRaw), cRaw);
     node.fluxo += r.VL_FAT; cli.fluxo += r.VL_FAT;
     if (r.STATUS === "PAGO") { node.pago += r.VL_FAT; cli.pago += r.VL_FAT; }
+    else if (r.STATUS === "EM ABERTO") { node.aberto += r.VL_FAT; cli.aberto += r.VL_FAT; }
+    else { node.faturar += r.VL_FAT; cli.faturar += r.VL_FAT; }
   });
 
   brDataset.forEach(function(r) {
@@ -1835,20 +1766,21 @@ function rBRV() {
   var groups = Object.keys(tree).map(function(gk) { return tree[gk]; })
     .sort(function(a, b) { return b.br - a.br || b.fluxo - a.fluxo; });
 
-  var totFluxo = 0, totPago = 0, totBR = 0;
-  groups.forEach(function(g) { totFluxo += g.fluxo; totPago += g.pago; totBR += g.br; });
-  var totPct = totBR > 0 ? (totFluxo / totBR * 100) : (totFluxo > 0 ? 100 : 0);
+  var totFluxo = 0, totPago = 0, totAberto = 0, totFaturar = 0, totBR = 0;
+  groups.forEach(function(g) { totFluxo += g.fluxo; totPago += g.pago; totAberto += g.aberto; totFaturar += g.faturar; totBR += g.br; });
+  // Meta Atingida considera apenas o que foi efetivamente pago.
+  var totPct = totBR > 0 ? (totPago / totBR * 100) : (totPago > 0 ? 100 : 0);
   var mesLblTxt = brvMesLabel(mes);
 
   // KPIs
   if (kpis) {
     var tpct = totPct.toFixed(1).replace(".", ",");
     var cls = atgClass(totPct);
-    var diffTot = totFluxo - totBR;
+    var diffTot = totPago - totBR;
     var diffCls = diffTot >= 0 ? "brv-diff-pos" : "brv-diff-neg";
     var pagoPct = totFluxo > 0 ? (totPago / totFluxo * 100).toFixed(1).replace(".", ",") : "0,0";
     kpis.innerHTML =
-      "<div class=\"brv-kc\"><div class=\"brv-ke\">% Meta BR Atingida</div>" +
+      "<div class=\"brv-kc\"><div class=\"brv-ke\">% Meta BR Atingida (Pago)</div>" +
         "<div class=\"brv-kv\">" + tpct + "%</div>" +
         "<div class=\"brv-ksb\"><span class=\"brv-pct-badge " + cls + "\">" + (totPct >= 95 ? "Meta atingida" : totPct >= 75 ? "Proximo da meta" : "Abaixo da meta") + "</span></div>" +
       "</div>" +
@@ -1858,11 +1790,11 @@ function rBRV() {
       "</div>" +
       "<div class=\"brv-kc\"><div class=\"brv-ke\">Business Review " + mesLblTxt + "</div>" +
         "<div class=\"brv-kv\">" + fmt(totBR) + "</div>" +
-        "<div class=\"brv-ksb\">Diferenca: <span class=\"" + diffCls + "\">" + (diffTot >= 0 ? "+" : "") + fmt(diffTot) + "</span></div>" +
+        "<div class=\"brv-ksb\">Diferenca (Pago): <span class=\"" + diffCls + "\">" + fmtDiff(diffTot) + "</span></div>" +
       "</div>";
   }
 
-  // Grafico comparativo (top 12 grupos)
+  // Grafico comparativo (top 12 grupos): Fluxo Atual segmentado por status x Business Review
   var top = groups.slice(0, 12);
   var ctx = document.getElementById("ch-brv");
   if (ctx) {
@@ -1872,16 +1804,22 @@ function rBRV() {
       data: {
         labels: top.map(function(g) { return g.label.length > 18 ? g.label.slice(0, 18) + "…" : g.label; }),
         datasets: [
-          { label: "Fluxo Atual", data: top.map(function(g){ return g.fluxo; }), backgroundColor: "#1D4F8F", borderRadius: 4, maxBarThickness: 22 },
-          { label: "Business Review", data: top.map(function(g){ return g.br; }), backgroundColor: "#8A94A6", borderRadius: 4, maxBarThickness: 22 }
+          { label: "Pago",             data: top.map(function(g){ return g.pago;    }), backgroundColor: "rgba(14,159,110,.55)",  stack: "fluxo", borderRadius: 3, maxBarThickness: 20 },
+          { label: "Em Aberto",        data: top.map(function(g){ return g.aberto;  }), backgroundColor: "rgba(217,119,6,.45)",   stack: "fluxo", borderRadius: 3, maxBarThickness: 20 },
+          { label: "A Faturar",        data: top.map(function(g){ return g.faturar; }), backgroundColor: "rgba(99,102,241,.40)",  stack: "fluxo", borderRadius: 3, maxBarThickness: 20 },
+          { label: "Business Review",  data: top.map(function(g){ return g.br;      }), backgroundColor: "#8A94A6",               stack: "br",    borderRadius: 3, maxBarThickness: 20 }
         ]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { position: "top", align: "end", labels: { boxWidth: 10, font: { size: 11 } } } },
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { position: "top", align: "end", labels: { boxWidth: 10, font: { size: 11 } } },
+          tooltip: { callbacks: { label: function(c) { return " " + c.dataset.label + ": " + fmt(c.raw); } } }
+        },
         scales: {
-          x: { ticks: { font: { size: 10 }, maxRotation: 35, minRotation: 0 }, grid: { display: false } },
-          y: { ticks: { font: { size: 10 }, callback: function(v){ return fmt(v); } }, grid: { color: "#EDF2F7" } }
+          x: { stacked: true, ticks: { font: { size: 10 }, maxRotation: 35, minRotation: 0 }, grid: { display: false } },
+          y: { stacked: true, ticks: { font: { size: 10 }, callback: function(v){ return fmt(v); } }, grid: { color: "#EDF2F7" } }
         }
       }
     });
@@ -1899,12 +1837,13 @@ function rBRV() {
                  "<div class=\"brv-pago-bar\"><div class=\"brv-pago-barf\" style=\"width:" + pct + "%\"></div></div>" +
                "</td>";
       };
-      var metricCells = function(fluxo, br) {
-        var diff = fluxo - br;
-        var pct  = br > 0 ? (fluxo / br * 100) : (fluxo > 0 ? 100 : 0);
+      // Meta Atingida/Diferenca calculadas com base no Pago (basePago), nao no Fluxo Atual.
+      var metricCells = function(basePago, br) {
+        var diff = basePago - br;
+        var pct  = br > 0 ? (basePago / br * 100) : (basePago > 0 ? 100 : 0);
         var diffCls = diff >= 0 ? "brv-diff-pos" : "brv-diff-neg";
         return "<td class=\"r\">" + fmt(br) + "</td>" +
-               "<td class=\"r\"><span class=\"" + diffCls + "\">" + (diff >= 0 ? "+" : "") + fmt(diff) + "</span></td>" +
+               "<td class=\"r\"><span class=\"" + diffCls + "\">" + fmtDiff(diff) + "</span></td>" +
                "<td class=\"r\"><span class=\"brv-pct-badge " + atgClass(pct) + "\">" + pct.toFixed(1).replace(".", ",") + "%</span></td>";
       };
 
@@ -1922,7 +1861,7 @@ function rBRV() {
                   "<td class=\"dl\" style=\"font-weight:600\">" + xbtn + g.label + "</td>" +
                   "<td class=\"r\" style=\"font-weight:700\">" + fmt(g.fluxo) + "</td>" +
                   pagoBarCell(g.fluxo, g.pago) +
-                  metricCells(g.fluxo, g.br) +
+                  metricCells(g.pago, g.br) +
                 "</tr>";
         if (hasKids) {
           clientes.forEach(function(c) {
@@ -1930,7 +1869,7 @@ function rBRV() {
                       "<td class=\"cl\" style=\"font-size:11px\">&#8627; " + c.label + "</td>" +
                       "<td class=\"r\" style=\"font-size:11px;font-weight:600\">" + fmt(c.fluxo) + "</td>" +
                       pagoBarCell(c.fluxo, c.pago) +
-                      metricCells(c.fluxo, c.br) +
+                      metricCells(c.pago, c.br) +
                     "</tr>";
           });
         }
@@ -1938,7 +1877,7 @@ function rBRV() {
       html += "<tr class=\"trt\"><td>Total Geral</td>" +
               "<td class=\"r\">" + fmt(totFluxo) + "</td>" +
               pagoBarCell(totFluxo, totPago) +
-              metricCells(totFluxo, totBR) +
+              metricCells(totPago, totBR) +
               "</tr>";
       tb.innerHTML = html;
     }
@@ -2289,7 +2228,7 @@ document.addEventListener('keydown', function(e) {
   // CTRL+SHIFT+P → PNG do card em foco (primeiro visível)
   if (e.key === 'P') {
     e.preventDefault();
-    var cards = ['card_receb_grupo','card_meta','card_mensal','card_carteira','card_operacao','card_pmr'];
+    var cards = ['card_receb_grupo','card_meta','card_operacao','card_pmr'];
     if (cards[0]) exportCardPng(cards[0], 'Dashboard_Recebimentos');
   }
   // CTRL+SHIFT+C → Copiar primeiro card
