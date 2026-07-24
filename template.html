@@ -176,6 +176,8 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
 .gt td.vt{background:var(--sf2)}
 .gt .crow td{background:var(--sf2)}
 .gt .crow:hover td{background:var(--az8)}
+.gt .g-row td{cursor:pointer}
+.gt .g-row:hover td{background:var(--az8)}
 .gt .crow td.vt{background:#E7ECF2}
 .gt .wks{border-left:1px solid var(--bdl)}
 .gt .wkh{background:var(--sf2);font-size:11px;color:var(--t3);font-weight:600;
@@ -1575,7 +1577,7 @@ function renderSemanal(thead, tbody, grupos, gMap, cMap, sems, wkFlags, hasPago,
       ?"<button class=\"xbtn\" data-grp=\""+g.replace(/"/g,"&quot;")+"\">"+( isOpen?"&#9660;":"&#9654;")+"</button>"
       :"<span style=\"display:inline-block;width:16px\"></span>";
 
-    rows += "<tr><td class=\"dl\">"+xbtn+g+"</td>"+cells;
+    rows += "<tr class=\"g-row\"><td class=\"dl\">"+xbtn+g+"</td>"+cells;
     if (hasPago) rows += "<td class=\"dr vp wks\" style=\"font-weight:700\">"+(rP>0?fmt(rP):"-")+"</td>";
     if (hasAb)   rows += "<td class=\"dr va\" style=\"font-weight:700\">"+(rA>0?fmt(rA):"-")+"</td>";
     if (hasFat)  rows += "<td class=\"dr sf3\" style=\"font-weight:700\">"+(rF>0?fmt(rF):"-")+"</td>";
