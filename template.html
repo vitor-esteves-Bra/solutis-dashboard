@@ -121,8 +121,13 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
 .kbd-p{background:var(--pgb);color:var(--pg);border:1px solid var(--pgr)}
 .kbd-a{background:var(--abb);color:var(--ab);border:1px solid var(--abr)}
 .kbd-f{background:var(--ftb);color:var(--ft);border:1px solid var(--ftr)}
-.kf-grupos{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
-.kf-grupo-pill{background:var(--ftb);color:var(--ft);border:1px solid var(--ftr);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:600}
+.kf-list{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.kf-item{display:flex;flex-direction:column;gap:2px}
+.kf-top{display:flex;justify-content:space-between;align-items:baseline;gap:4px}
+.kf-nome{font-size:10px;font-weight:600;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%}
+.kf-val{font-size:10px;font-weight:700;color:var(--ft);white-space:nowrap}
+.kf-bar{height:3px;background:var(--ftb);border-radius:99px;overflow:hidden}
+.kf-barf{height:100%;background:linear-gradient(90deg,var(--ft),#818CF8);border-radius:99px;transition:width .6s ease}
 .kc-r::before{background:linear-gradient(90deg,#C0392B,#E74C3C)}
 .kbd-r{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
 .kc-r{display:none}
@@ -1091,7 +1096,7 @@ function render() {
   var data = applyF();
   var tot = 0, p = 0, a = 0, f = 0, nfs = data.length, nfp = 0, totalRisco = 0;
   var riscoGrupos = {};
-  var faturarGruposSet = {};
+  var faturarGruposMap = {};
   data.forEach(function(r) {
     tot += r.VL_FAT;
     if      (r.STATUS === "PAGO")       { p += r.VL_FAT; nfp++; }
@@ -1099,7 +1104,7 @@ function render() {
     else {
       f += r.VL_FAT;
       var gf = r["Grupo Cliente"] || "Outros";
-      faturarGruposSet[gf] = true;
+      faturarGruposMap[gf] = (faturarGruposMap[gf] || 0) + r.VL_FAT;
     }
     if (r.NIVEL_RISCO === "alto" && r.VL_RISCO > 0) {
       totalRisco += r.VL_RISCO;
@@ -1107,7 +1112,7 @@ function render() {
       riscoGrupos[g] = (riscoGrupos[g] || 0) + r.VL_RISCO;
     }
   });
-  var faturarGrupos = Object.keys(faturarGruposSet).sort();
+  var faturarGrupos = faturarGruposMap;
   var taxa = tot > 0 ? p / tot : 0;
   // BR filtrado: soma meses disponíveis no BR_HISTORICO que passam hasMes() + filtros
   var totalBR = 0; var mesesBR = [];
@@ -1221,22 +1226,34 @@ function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, me
       "<div class=\"kbd kbd-a\">Em Aberto</div>" +
     "</div>";
   if (f > 0) {
-    var fGrupos = faturarGrupos || [];
+    var fGrupos = Object.keys(faturarGrupos || {});
     // So exibe a lista de grupos quando forem poucos (ate 5) — no inicio do
-    // mes a lista fica grande e polui o card, entao nesse caso ela some.
-    var fGruposHtml = (fGrupos.length > 0 && fGrupos.length <= 5)
-      ? "<div class=\"kf-grupos\">" + fGrupos.map(function(gnome) {
-          return "<span class=\"kf-grupo-pill\">" + gnome + "</span>";
-        }).join("") + "</div>"
-      : "";
+    // mes a lista fica grande e polui o card, entao nesse caso ela some e
+    // volta o badge "Pipeline" no lugar.
+    var showList = fGrupos.length > 0 && fGrupos.length <= 5;
+    var fListaHtml = "";
+    if (showList) {
+      var fOrdenados = fGrupos.sort(function(x, y) { return faturarGrupos[y] - faturarGrupos[x]; });
+      fListaHtml = "<div class=\"kf-list\">" + fOrdenados.map(function(gnome) {
+        var vg = faturarGrupos[gnome];
+        var label = gnome.length > 22 ? gnome.slice(0, 20) + "…" : gnome;
+        var pctBar = f > 0 ? Math.round((vg / f) * 100) : 0;
+        return "<div class=\"kf-item\">" +
+                 "<div class=\"kf-top\">" +
+                   "<span class=\"kf-nome\">" + label + "</span>" +
+                   "<span class=\"kf-val\">" + fmt(vg) + "</span>" +
+                 "</div>" +
+                 "<div class=\"kf-bar\"><div class=\"kf-barf\" style=\"width:" + pctBar + "%\"></div></div>" +
+               "</div>";
+      }).join("") + "</div>";
+    }
     cards +=
       "<div class=\"kc kc-f\">" +
         "<div class=\"ke\">A Faturar</div>" +
         "<div class=\"ku\">R$ milhoes</div>" +
         "<div class=\"kv\">" + fmt(f) + "</div>" +
         "<div class=\"ksb\">" + pct(f,tot) + " da carteira</div>" +
-        fGruposHtml +
-        "<div class=\"kbd kbd-f\">Pipeline</div>" +
+        (showList ? fListaHtml : "<div class=\"kbd kbd-f\">Pipeline</div>") +
       "</div>";
   }
   if (totalRisco > 0) cards += riscoCard;
