@@ -121,6 +121,8 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
 .kbd-p{background:var(--pgb);color:var(--pg);border:1px solid var(--pgr)}
 .kbd-a{background:var(--abb);color:var(--ab);border:1px solid var(--abr)}
 .kbd-f{background:var(--ftb);color:var(--ft);border:1px solid var(--ftr)}
+.kf-grupos{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.kf-grupo-pill{background:var(--ftb);color:var(--ft);border:1px solid var(--ftr);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:600}
 .kc-r::before{background:linear-gradient(90deg,#C0392B,#E74C3C)}
 .kbd-r{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
 .kc-r{display:none}
@@ -1089,17 +1091,23 @@ function render() {
   var data = applyF();
   var tot = 0, p = 0, a = 0, f = 0, nfs = data.length, nfp = 0, totalRisco = 0;
   var riscoGrupos = {};
+  var faturarGruposSet = {};
   data.forEach(function(r) {
     tot += r.VL_FAT;
     if      (r.STATUS === "PAGO")       { p += r.VL_FAT; nfp++; }
     else if (r.STATUS === "EM ABERTO")    a += r.VL_FAT;
-    else                                  f += r.VL_FAT;
+    else {
+      f += r.VL_FAT;
+      var gf = r["Grupo Cliente"] || "Outros";
+      faturarGruposSet[gf] = true;
+    }
     if (r.NIVEL_RISCO === "alto" && r.VL_RISCO > 0) {
       totalRisco += r.VL_RISCO;
       var g = r["Grupo Cliente"] || "Outros";
       riscoGrupos[g] = (riscoGrupos[g] || 0) + r.VL_RISCO;
     }
   });
+  var faturarGrupos = Object.keys(faturarGruposSet).sort();
   var taxa = tot > 0 ? p / tot : 0;
   // BR filtrado: soma meses disponíveis no BR_HISTORICO que passam hasMes() + filtros
   var totalBR = 0; var mesesBR = [];
@@ -1117,7 +1125,7 @@ function render() {
     });
     if (vlMes > 0) { totalBR += vlMes; mesesBR.push(mes); }
   });
-  rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, mesesBR);
+  rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, mesesBR, faturarGrupos);
   rGrupo(data);
   rOPs(data);
   rPMR(data);
@@ -1125,7 +1133,7 @@ function render() {
 }
 
 // ── KPIs ──────────────────────────────────────────────────────────────────
-function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, mesesBR) {
+function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, mesesBR, faturarGrupos) {
   var g = document.getElementById("kg"); if (!g) return;
   var tp = (taxa*100).toFixed(1).replace(".",",");
   var pw = Math.round(taxa * 100);
@@ -1212,14 +1220,25 @@ function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, me
       "<div class=\"ksb\">" + pct(a,tot) + " da carteira</div>" +
       "<div class=\"kbd kbd-a\">Em Aberto</div>" +
     "</div>";
-  if (f > 0) cards +=
-    "<div class=\"kc kc-f\">" +
-      "<div class=\"ke\">A Faturar</div>" +
-      "<div class=\"ku\">R$ milhoes</div>" +
-      "<div class=\"kv\">" + fmt(f) + "</div>" +
-      "<div class=\"ksb\">" + pct(f,tot) + " da carteira</div>" +
-      "<div class=\"kbd kbd-f\">Pipeline</div>" +
-    "</div>";
+  if (f > 0) {
+    var fGrupos = faturarGrupos || [];
+    // So exibe a lista de grupos quando forem poucos (ate 5) — no inicio do
+    // mes a lista fica grande e polui o card, entao nesse caso ela some.
+    var fGruposHtml = (fGrupos.length > 0 && fGrupos.length <= 5)
+      ? "<div class=\"kf-grupos\">" + fGrupos.map(function(gnome) {
+          return "<span class=\"kf-grupo-pill\">" + gnome + "</span>";
+        }).join("") + "</div>"
+      : "";
+    cards +=
+      "<div class=\"kc kc-f\">" +
+        "<div class=\"ke\">A Faturar</div>" +
+        "<div class=\"ku\">R$ milhoes</div>" +
+        "<div class=\"kv\">" + fmt(f) + "</div>" +
+        "<div class=\"ksb\">" + pct(f,tot) + " da carteira</div>" +
+        fGruposHtml +
+        "<div class=\"kbd kbd-f\">Pipeline</div>" +
+      "</div>";
+  }
   if (totalRisco > 0) cards += riscoCard;
   g.innerHTML = cards;
 }
