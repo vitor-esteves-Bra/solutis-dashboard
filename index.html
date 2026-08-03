@@ -132,6 +132,10 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
 .kbd-r{background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
 .kc-r{display:none}
 .kc-r.visible{display:block}
+.kc-df::before{background:linear-gradient(90deg,#4338CA,#6366F1)}
+.kdf-val{color:#4338CA}
+.kdf-bar{background:#E0E7FF}
+.kdf-barf{background:linear-gradient(90deg,#4338CA,#6366F1)}
 .krl{margin-top:10px;display:flex;flex-direction:column;gap:6px}
 .krl-item{display:flex;flex-direction:column;gap:2px}
 .krl-top{display:flex;justify-content:space-between;align-items:baseline;gap:4px}
@@ -1097,9 +1101,14 @@ function render() {
   var tot = 0, p = 0, a = 0, f = 0, nfs = data.length, nfp = 0, totalRisco = 0;
   var riscoGrupos = {};
   var faturarGruposMap = {};
+  var pagoGruposMap = {}; // Pago por Grupo Cliente (chave em upper, p/ comparar com BR)
   data.forEach(function(r) {
     tot += r.VL_FAT;
-    if      (r.STATUS === "PAGO")       { p += r.VL_FAT; nfp++; }
+    if      (r.STATUS === "PAGO")       {
+      p += r.VL_FAT; nfp++;
+      var gp = (r["Grupo Cliente"] || "Outros").toUpperCase();
+      pagoGruposMap[gp] = (pagoGruposMap[gp] || 0) + r.VL_FAT;
+    }
     else if (r.STATUS === "EM ABERTO")    a += r.VL_FAT;
     else {
       f += r.VL_FAT;
@@ -1116,6 +1125,7 @@ function render() {
   var taxa = tot > 0 ? p / tot : 0;
   // BR filtrado: soma meses disponíveis no BR_HISTORICO que passam hasMes() + filtros
   var totalBR = 0; var mesesBR = [];
+  var brGruposMap = {}; // BR por Grupo Cliente (chave em upper), somado nos meses selecionados
   Object.keys(BR_HISTORICO).sort().forEach(function(mes) {
     if (!hasMes(mes)) return;
     var registros = BR_HISTORICO[mes];
@@ -1127,10 +1137,11 @@ function render() {
       if (F.dir  !== "all" && r.OP   !== F.dir)                return;
       if (F.exec !== "all" && r.EXEC !== F.exec)               return;
       vlMes += r.VL;
+      brGruposMap[grpUp] = (brGruposMap[grpUp] || 0) + r.VL;
     });
     if (vlMes > 0) { totalBR += vlMes; mesesBR.push(mes); }
   });
-  rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, mesesBR, faturarGrupos);
+  rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, mesesBR, faturarGrupos, pagoGruposMap, brGruposMap);
   rGrupo(data);
   rOPs(data);
   rPMR(data);
@@ -1138,11 +1149,20 @@ function render() {
 }
 
 // ── KPIs ──────────────────────────────────────────────────────────────────
-function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, mesesBR, faturarGrupos) {
+function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, mesesBR, faturarGrupos, pagoGruposMap, brGruposMap) {
   var g = document.getElementById("kg"); if (!g) return;
   var tp = (taxa*100).toFixed(1).replace(".",",");
   var pw = Math.round(taxa * 100);
   var metaLabel = pw >= 100 ? "&#10003; Meta alcancada" : pw >= 75 ? "~ Proximo da meta" : "Em progresso";
+
+  // Modo comparativo: 1+ meses selecionados no filtro, todos ja encerrados
+  // (anteriores ao mes corrente) e todos com base de Business Review
+  // cadastrada para os filtros atuais. Fora disso, mantem o layout normal.
+  var curMesRef = new Date();
+  var curMesKey = curMesRef.getFullYear() + "-" + (curMesRef.getMonth()+1 < 10 ? "0"+(curMesRef.getMonth()+1) : ""+(curMesRef.getMonth()+1));
+  var modoComparativo = F.mes.length > 0
+                      && mesesBR.length === F.mes.length
+                      && F.mes.every(function(m){ return m < curMesKey; });
 
   var riscoCard = "";
   if (totalRisco > 0) {
@@ -1173,90 +1193,158 @@ function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, me
     riscoCard = "<div class=\"kc kc-r\"></div>";
   }
   var cards = "";
-  // Card Business Review
-  if (totalBR > 0) {
-    var brLabel = mesesBR.map(function(m){ var p=m.split("-"); return (MES_NOME[p[1]]||p[1])+"/"+p[0].slice(2); }).join(", ");
-    var brDelta = tot > 0 ? ((tot - totalBR) / totalBR * 100) : 0;
-    var brDeltaStr = (brDelta >= 0 ? "+" : "") + brDelta.toFixed(1).replace(".",",") + "%";
-    var brDeltaColor = brDelta >= 0 ? "#059669" : "#DC2626";
-    var brDeltaIcon  = brDelta >= 0 ? "&#9650;" : "&#9660;";
+
+  if (modoComparativo) {
+    // ── MODO COMPARATIVO: mes(es) ja encerrados com base BR cadastrada ──
+    // So mostra os cards de comparacao BR x Realizado (Recebido). Cards de
+    // Carteira Atual/Em Aberto/A Faturar/Em Risco somem porque, apos a
+    // virada do mes, o que nao foi pago e reprogramado pro mes seguinte —
+    // entao a foto do mes fechado e so o que efetivamente entrou.
+    var brLabelComp = mesesBR.map(function(m){ var pm=m.split("-"); return (MES_NOME[pm[1]]||pm[1])+"/"+pm[0].slice(2); }).join(", ");
     cards +=
       "<div class=\"kc kc-br\">" +
         "<div class=\"ke\">Business Review</div>" +
         "<div class=\"ku\">R$ milhoes</div>" +
         "<div class=\"kv\">" + fmt(totalBR) + "</div>" +
-        "<div class=\"ksb\">Meta definida</div>" +
+        "<div class=\"ksb\">Meta &middot; " + brLabelComp + "</div>" +
         "<div class=\"kbd kbd-br\">Meta</div>" +
       "</div>";
-  }
-  // Card Carteira Atual (antigo Total Previsto)
-  if (tot > 0) {
-    var deltaVsBR = "";
-    if (totalBR > 0) {
-      var d2 = ((tot - totalBR) / totalBR * 100);
-      var d2str = (d2 >= 0 ? "+" : "") + d2.toFixed(1).replace(".",",") + "%";
-      var d2col = d2 >= 0 ? "#059669" : "#DC2626";
-      var d2icon = d2 >= 0 ? "&#9650;" : "&#9660;";
-      deltaVsBR = " <span style=\"color:" + d2col + ";font-size:10px;font-weight:700\">" + d2icon + " " + d2str + " vs BR</span>";
-    }
+
+    var dComp = totalBR > 0 ? ((p - totalBR) / totalBR * 100) : 0;
+    var dCompStr = (dComp >= 0 ? "+" : "") + dComp.toFixed(1).replace(".",",") + "%";
+    var dCompCol = dComp >= 0 ? "#059669" : "#DC2626";
+    var dCompIco = dComp >= 0 ? "&#9650;" : "&#9660;";
+    var deltaVsBRComp = " <span style=\"color:" + dCompCol + ";font-size:10px;font-weight:700\">" + dCompIco + " " + dCompStr + " vs BR</span>";
+    var pctBRRecebido = totalBR > 0 ? Math.round(p / totalBR * 100) : (p > 0 ? 100 : 0);
+    var metaLabelComp = pctBRRecebido >= 100 ? "&#10003; Meta alcancada" : pctBRRecebido >= 75 ? "~ Proximo da meta" : "Abaixo da meta";
     cards +=
-      "<div class=\"kc kc-h\">" +
-        "<div class=\"ke\">Carteira Atual" + deltaVsBR + "</div>" +
+      "<div class=\"kc kc-p\">" +
+        "<div class=\"ke\">Recebido" + deltaVsBRComp + "</div>" +
         "<div class=\"ku\">R$ milhoes</div>" +
-        "<div class=\"kv\">" + fmt(tot) + "</div>" +
-        "<div class=\"ksb\">Taxa de recebimento " + tp + "%</div>" +
-        "<div class=\"kbar\"><div class=\"kbf\" style=\"width:" + pw + "%;background:linear-gradient(90deg,var(--azd),var(--azl))\"></div></div>" +
-        "<div class=\"kbd kbd-n\">" + tp + "% recebido</div>" +
+        "<div class=\"kv\">" + fmt(p) + "</div>" +
+        "<div class=\"ksb\">" + pct(p,totalBR) + " da Meta BR</div>" +
+        "<div class=\"kbd kbd-p\">" + metaLabelComp + "</div>" +
       "</div>";
-  }
-  if (p > 0) cards +=
-    "<div class=\"kc kc-p\">" +
-      "<div class=\"ke\">Ja Recebido</div>" +
-      "<div class=\"ku\">R$ milhoes</div>" +
-      "<div class=\"kv\">" + fmt(p) + "</div>" +
-      "<div class=\"ksb\">" + pct(p,tot) + " do total</div>" +
-      "<div class=\"kbd kbd-p\">" + metaLabel + "</div>" +
-    "</div>";
-  if (a > 0) cards +=
-    "<div class=\"kc kc-a\">" +
-      "<div class=\"ke\">Em Aberto</div>" +
-      "<div class=\"ku\">R$ milhoes</div>" +
-      "<div class=\"kv\">" + fmt(a) + "</div>" +
-      "<div class=\"ksb\">" + pct(a,tot) + " da carteira</div>" +
-      "<div class=\"kbd kbd-a\">Em Aberto</div>" +
-    "</div>";
-  if (f > 0) {
-    var fGrupos = Object.keys(faturarGrupos || {});
-    // So exibe a lista de grupos quando forem poucos (ate 5) — no inicio do
-    // mes a lista fica grande e polui o card, entao nesse caso ela some e
-    // volta o badge "Pipeline" no lugar.
-    var showList = fGrupos.length > 0 && fGrupos.length <= 5;
-    var fListaHtml = "";
-    if (showList) {
-      var fOrdenados = fGrupos.sort(function(x, y) { return faturarGrupos[y] - faturarGrupos[x]; });
-      fListaHtml = "<div class=\"kf-list\">" + fOrdenados.map(function(gnome) {
-        var vg = faturarGrupos[gnome];
-        var label = gnome.length > 22 ? gnome.slice(0, 20) + "…" : gnome;
-        var pctBar = f > 0 ? Math.round((vg / f) * 100) : 0;
-        return "<div class=\"kf-item\">" +
-                 "<div class=\"kf-top\">" +
-                   "<span class=\"kf-nome\">" + label + "</span>" +
-                   "<span class=\"kf-val\">" + fmt(vg) + "</span>" +
+
+    // Card extra: top 5 grupos com maior diferenca negativa (Pago - BR)
+    var diffKeys = {};
+    Object.keys(brGruposMap || {}).forEach(function(k){ diffKeys[k] = true; });
+    Object.keys(pagoGruposMap || {}).forEach(function(k){ diffKeys[k] = true; });
+    var diffList = Object.keys(diffKeys).map(function(k) {
+      var brV = (brGruposMap && brGruposMap[k]) || 0;
+      var pgV = (pagoGruposMap && pagoGruposMap[k]) || 0;
+      return { g:k, diff: pgV - brV, br: brV };
+    }).filter(function(x){ return x.diff < 0 && x.br > 0; })
+      .sort(function(x,y){ return x.diff - y.diff; })
+      .slice(0,5);
+
+    if (diffList.length > 0) {
+      var maxAbsDiff = Math.max.apply(null, diffList.map(function(x){ return Math.abs(x.diff); }));
+      var diffHTML = diffList.map(function(x) {
+        var label = x.g.length > 18 ? x.g.slice(0,16) + "\u2026" : x.g;
+        var pctBar = maxAbsDiff > 0 ? Math.round(Math.abs(x.diff) / maxAbsDiff * 100) : 0;
+        return "<div class=\"krl-item\">" +
+                 "<div class=\"krl-top\">" +
+                   "<span class=\"krl-nome\">" + label + "</span>" +
+                   "<span class=\"krl-val kdf-val\">" + fmtDiff(x.diff) + "</span>" +
                  "</div>" +
-                 "<div class=\"kf-bar\"><div class=\"kf-barf\" style=\"width:" + pctBar + "%\"></div></div>" +
+                 "<div class=\"krl-bar kdf-bar\"><div class=\"krl-barf kdf-barf\" style=\"width:" + pctBar + "%\"></div></div>" +
                "</div>";
-      }).join("") + "</div>";
+      }).join("");
+      cards +=
+        "<div class=\"kc kc-df visible\">" +
+          "<div class=\"ke\">Maiores Diferencas vs BR</div>" +
+          "<div class=\"ku\">Top 5 grupos &middot; R$ milhoes</div>" +
+          "<div class=\"krl\">" + diffHTML + "</div>" +
+        "</div>";
     }
-    cards +=
-      "<div class=\"kc kc-f\">" +
-        "<div class=\"ke\">A Faturar</div>" +
+  } else {
+    // ── MODO NORMAL (comportamento atual) ──
+    // Card Business Review
+    if (totalBR > 0) {
+      var brLabel = mesesBR.map(function(m){ var pm=m.split("-"); return (MES_NOME[pm[1]]||pm[1])+"/"+pm[0].slice(2); }).join(", ");
+      var brDelta = tot > 0 ? ((tot - totalBR) / totalBR * 100) : 0;
+      var brDeltaStr = (brDelta >= 0 ? "+" : "") + brDelta.toFixed(1).replace(".",",") + "%";
+      var brDeltaColor = brDelta >= 0 ? "#059669" : "#DC2626";
+      var brDeltaIcon  = brDelta >= 0 ? "&#9650;" : "&#9660;";
+      cards +=
+        "<div class=\"kc kc-br\">" +
+          "<div class=\"ke\">Business Review</div>" +
+          "<div class=\"ku\">R$ milhoes</div>" +
+          "<div class=\"kv\">" + fmt(totalBR) + "</div>" +
+          "<div class=\"ksb\">Meta definida</div>" +
+          "<div class=\"kbd kbd-br\">Meta</div>" +
+        "</div>";
+    }
+    // Card Carteira Atual (antigo Total Previsto)
+    if (tot > 0) {
+      var deltaVsBR = "";
+      if (totalBR > 0) {
+        var d2 = ((tot - totalBR) / totalBR * 100);
+        var d2str = (d2 >= 0 ? "+" : "") + d2.toFixed(1).replace(".",",") + "%";
+        var d2col = d2 >= 0 ? "#059669" : "#DC2626";
+        var d2icon = d2 >= 0 ? "&#9650;" : "&#9660;";
+        deltaVsBR = " <span style=\"color:" + d2col + ";font-size:10px;font-weight:700\">" + d2icon + " " + d2str + " vs BR</span>";
+      }
+      cards +=
+        "<div class=\"kc kc-h\">" +
+          "<div class=\"ke\">Carteira Atual" + deltaVsBR + "</div>" +
+          "<div class=\"ku\">R$ milhoes</div>" +
+          "<div class=\"kv\">" + fmt(tot) + "</div>" +
+          "<div class=\"ksb\">Taxa de recebimento " + tp + "%</div>" +
+          "<div class=\"kbar\"><div class=\"kbf\" style=\"width:" + pw + "%;background:linear-gradient(90deg,var(--azd),var(--azl))\"></div></div>" +
+          "<div class=\"kbd kbd-n\">" + tp + "% recebido</div>" +
+        "</div>";
+    }
+    if (p > 0) cards +=
+      "<div class=\"kc kc-p\">" +
+        "<div class=\"ke\">Ja Recebido</div>" +
         "<div class=\"ku\">R$ milhoes</div>" +
-        "<div class=\"kv\">" + fmt(f) + "</div>" +
-        "<div class=\"ksb\">" + pct(f,tot) + " da carteira</div>" +
-        (showList ? fListaHtml : "<div class=\"kbd kbd-f\">Pipeline</div>") +
+        "<div class=\"kv\">" + fmt(p) + "</div>" +
+        "<div class=\"ksb\">" + pct(p,tot) + " do total</div>" +
+        "<div class=\"kbd kbd-p\">" + metaLabel + "</div>" +
       "</div>";
+    if (a > 0) cards +=
+      "<div class=\"kc kc-a\">" +
+        "<div class=\"ke\">Em Aberto</div>" +
+        "<div class=\"ku\">R$ milhoes</div>" +
+        "<div class=\"kv\">" + fmt(a) + "</div>" +
+        "<div class=\"ksb\">" + pct(a,tot) + " da carteira</div>" +
+        "<div class=\"kbd kbd-a\">Em Aberto</div>" +
+      "</div>";
+    if (f > 0) {
+      var fGrupos = Object.keys(faturarGrupos || {});
+      // So exibe a lista de grupos quando forem poucos (ate 5) — no inicio do
+      // mes a lista fica grande e polui o card, entao nesse caso ela some e
+      // volta o badge "Pipeline" no lugar.
+      var showList = fGrupos.length > 0 && fGrupos.length <= 5;
+      var fListaHtml = "";
+      if (showList) {
+        var fOrdenados = fGrupos.sort(function(x, y) { return faturarGrupos[y] - faturarGrupos[x]; });
+        fListaHtml = "<div class=\"kf-list\">" + fOrdenados.map(function(gnome) {
+          var vg = faturarGrupos[gnome];
+          var label = gnome.length > 22 ? gnome.slice(0, 20) + "…" : gnome;
+          var pctBar = f > 0 ? Math.round((vg / f) * 100) : 0;
+          return "<div class=\"kf-item\">" +
+                   "<div class=\"kf-top\">" +
+                     "<span class=\"kf-nome\">" + label + "</span>" +
+                     "<span class=\"kf-val\">" + fmt(vg) + "</span>" +
+                   "</div>" +
+                   "<div class=\"kf-bar\"><div class=\"kf-barf\" style=\"width:" + pctBar + "%\"></div></div>" +
+                 "</div>";
+        }).join("") + "</div>";
+      }
+      cards +=
+        "<div class=\"kc kc-f\">" +
+          "<div class=\"ke\">A Faturar</div>" +
+          "<div class=\"ku\">R$ milhoes</div>" +
+          "<div class=\"kv\">" + fmt(f) + "</div>" +
+          "<div class=\"ksb\">" + pct(f,tot) + " da carteira</div>" +
+          (showList ? fListaHtml : "<div class=\"kbd kbd-f\">Pipeline</div>") +
+        "</div>";
+    }
+    if (totalRisco > 0) cards += riscoCard;
   }
-  if (totalRisco > 0) cards += riscoCard;
   g.innerHTML = cards;
 }
 
