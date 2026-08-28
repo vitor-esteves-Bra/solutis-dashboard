@@ -1153,7 +1153,6 @@ function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, me
   var g = document.getElementById("kg"); if (!g) return;
   var tp = (taxa*100).toFixed(1).replace(".",",");
   var pw = Math.round(taxa * 100);
-  var metaLabel = pw >= 100 ? "&#10003; Meta alcancada" : pw >= 75 ? "~ Proximo da meta" : "Em progresso";
 
   // Modo comparativo: 1+ meses selecionados no filtro, todos ja encerrados
   // (anteriores ao mes corrente) e todos com base de Business Review
@@ -1302,7 +1301,6 @@ function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, me
         "<div class=\"ku\">R$ milhoes</div>" +
         "<div class=\"kv\">" + fmt(p) + "</div>" +
         "<div class=\"ksb\">" + pct(p,tot) + " do total</div>" +
-        "<div class=\"kbd kbd-p\">" + metaLabel + "</div>" +
       "</div>";
     if (a > 0) cards +=
       "<div class=\"kc kc-a\">" +
