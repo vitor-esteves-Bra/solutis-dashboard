@@ -1214,15 +1214,12 @@ function rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, me
     var dCompCol = dComp >= 0 ? "#059669" : "#DC2626";
     var dCompIco = dComp >= 0 ? "&#9650;" : "&#9660;";
     var deltaVsBRComp = " <span style=\"color:" + dCompCol + ";font-size:10px;font-weight:700\">" + dCompIco + " " + dCompStr + " vs BR</span>";
-    var pctBRRecebido = totalBR > 0 ? Math.round(p / totalBR * 100) : (p > 0 ? 100 : 0);
-    var metaLabelComp = pctBRRecebido >= 100 ? "&#10003; Meta alcancada" : pctBRRecebido >= 75 ? "~ Proximo da meta" : "Abaixo da meta";
     cards +=
       "<div class=\"kc kc-p\">" +
         "<div class=\"ke\">Recebido" + deltaVsBRComp + "</div>" +
         "<div class=\"ku\">R$ milhoes</div>" +
         "<div class=\"kv\">" + fmt(p) + "</div>" +
         "<div class=\"ksb\">" + pct(p,totalBR) + " da Meta BR</div>" +
-        "<div class=\"kbd kbd-p\">" + metaLabelComp + "</div>" +
       "</div>";
 
     // Card extra: top 5 grupos com maior diferenca negativa (Pago - BR)
