@@ -775,7 +775,7 @@ body.pm .card-menu  { display:none !important; }
       <div style="position:relative;height:160px;margin-bottom:14px"><canvas id="ch-op"></canvas></div>
       <div style="overflow-x:auto">
         <table class="tbl">
-          <thead><tr><th class="l">Operacao</th><th class="r">Pago</th><th class="r">Em Aberto</th><th class="r">A Faturar</th><th class="r">Total</th></tr></thead>
+          <thead><tr><th class="l">Operacao</th><th class="r">Pago</th><th class="r">Em Aberto</th><th class="r">A Faturar</th><th class="r">Total</th><th class="r" id="th-op-br" style="display:none">Business Review</th></tr></thead>
           <tbody id="tb-op"></tbody>
         </table>
       </div>
@@ -1716,9 +1716,15 @@ function renderSemanal(thead, tbody, grupos, gMap, cMap, sems, wkFlags, hasPago,
 
 
 // ── OPs ───────────────────────────────────────────────────────────────────
+// Lista sempre OP1..OP4 (mesmo com valor zero) e adiciona barra comparativa
+// com Business Review (meses ja encerrados) ou Forecast (mes atual/futuro),
+// somando os meses ativos no filtro (F.mes) e respeitando Grupo/BU/Executivo.
+var OPS_FIXAS = ["OP1","OP2","OP3","OP4"];
+
 function rOPs(data) {
   kch("op");
   var byO = {};
+  OPS_FIXAS.forEach(function(o){ byO[o] = {p:0,a:0,f:0}; });
   data.forEach(function(r) {
     var o = r.DirOP || "-";
     if (!byO[o]) byO[o] = {p:0,a:0,f:0};
@@ -1726,35 +1732,67 @@ function rOPs(data) {
     else if (r.STATUS === "EM ABERTO")  byO[o].a += r.VL_FAT;
     else                                byO[o].f += r.VL_FAT;
   });
-  var ops = Object.keys(byO).sort();
+
+  // Meta (Business Review / Forecast) por operacao, somando os meses do filtro
+  var curMesRef = new Date();
+  var curMM = curMesRef.getMonth() + 1;
+  var curMesKey = curMesRef.getFullYear() + "-" + (curMM < 10 ? "0" + curMM : "" + curMM);
+  var brByO = {};
+  var hasMeta = false;
+  var metaLabel = "Business Review";
+  if (F.mes.length > 0) {
+    var algumFuturo = F.mes.some(function(m){ return m >= curMesKey; });
+    metaLabel = algumFuturo ? "Forecast" : "Business Review";
+    F.mes.forEach(function(m) {
+      var registros = BR_HISTORICO[m];
+      if (!registros) return;
+      registros.forEach(function(r) {
+        var grpUp = (r.GRP || "").toUpperCase();
+        if (F.grp  !== "all" && grpUp  !== F.grp.toUpperCase())  return;
+        if (F.bu   !== "all" && r.BU   !== F.bu)                 return;
+        if (F.exec !== "all" && r.EXEC !== F.exec)               return;
+        var o = r.OP || "-";
+        if (!byO[o]) byO[o] = {p:0,a:0,f:0};
+        brByO[o] = (brByO[o] || 0) + r.VL;
+        hasMeta = true;
+      });
+    });
+  }
+
+  var extras = Object.keys(byO).filter(function(o){ return OPS_FIXAS.indexOf(o) < 0; }).sort();
+  var ops = OPS_FIXAS.concat(extras);
+
   var ctx = document.getElementById("ch-op");
   if (ctx) {
     var ds2 = [];
-    if (ops.some(function(o){return byO[o].p>0;})) ds2.push({label:"Pago",     data:ops.map(function(o){return byO[o].p;}),backgroundColor:"rgba(14,159,110,.80)",borderRadius:4,borderSkipped:false});
-    if (ops.some(function(o){return byO[o].a>0;})) ds2.push({label:"Em Aberto",data:ops.map(function(o){return byO[o].a;}),backgroundColor:"rgba(217,119,6,.75)", borderRadius:4,borderSkipped:false});
-    if (ops.some(function(o){return byO[o].f>0;})) ds2.push({label:"A Faturar",data:ops.map(function(o){return byO[o].f;}),backgroundColor:"rgba(99,102,241,.70)",borderRadius:4,borderSkipped:false});
+    if (ops.some(function(o){return byO[o].p>0;})) ds2.push({label:"Pago",     stack:"atual", data:ops.map(function(o){return byO[o].p;}),backgroundColor:"rgba(14,159,110,.80)",borderRadius:4,borderSkipped:false});
+    if (ops.some(function(o){return byO[o].a>0;})) ds2.push({label:"Em Aberto",stack:"atual", data:ops.map(function(o){return byO[o].a;}),backgroundColor:"rgba(217,119,6,.75)", borderRadius:4,borderSkipped:false});
+    if (ops.some(function(o){return byO[o].f>0;})) ds2.push({label:"A Faturar",stack:"atual", data:ops.map(function(o){return byO[o].f;}),backgroundColor:"rgba(99,102,241,.70)",borderRadius:4,borderSkipped:false});
+    if (hasMeta) ds2.push({label:metaLabel, stack:"meta", data:ops.map(function(o){return brByO[o]||0;}),backgroundColor:"rgba(100,116,139,.55)",borderRadius:4,borderSkipped:false});
     CH["op"] = new Chart(ctx, {
       type:"bar", data:{labels:ops,datasets:ds2},
       options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",
-        plugins:{legend:{position:"bottom",labels:{padding:10}},tooltip:{callbacks:{label:function(c){return " "+fmt(c.raw);}}}},
-        scales:{x:{stacked:true,grid:{color:"#EDF2F7"},border:{display:false},ticks:{callback:function(v){return fmt(v);}}},
-                y:{stacked:true,grid:{display:false},border:{display:false}}}}
+        plugins:{legend:{position:"bottom",labels:{padding:10}},tooltip:{callbacks:{label:function(c){return " "+c.dataset.label+": "+fmt(c.raw);}}}},
+        scales:{x:{grid:{color:"#EDF2F7"},border:{display:false},ticks:{callback:function(v){return fmt(v);}}},
+                y:{grid:{display:false},border:{display:false}}}}
     });
   }
   var tb = document.getElementById("tb-op"); if (!tb) return;
-  var sorted = Object.keys(byO).sort(function(a,b){
-    return (byO[b].p+byO[b].a+byO[b].f) - (byO[a].p+byO[a].a+byO[a].f);
-  });
-  var tP=0,tA=0,tF=0;
-  var rows = sorted.map(function(o) {
+  var thBr = document.getElementById("th-op-br");
+  if (thBr) { thBr.textContent = metaLabel; thBr.style.display = hasMeta ? "" : "none"; }
+  var tP=0,tA=0,tF=0,tBR=0;
+  var rows = ops.map(function(o) {
     var v = byO[o]; tP+=v.p; tA+=v.a; tF+=v.f;
+    var brv = brByO[o] || 0; tBR += brv;
+    var brCell = hasMeta ? ("<td class=\"r\">" + (brv>0?fmt(brv):"<span class=\"vm\">-</span>") + "</td>") : "";
     return "<tr><td style=\"font-weight:600\">" + o + "</td>" +
       "<td class=\"r vp\">" + (v.p>0?fmt(v.p):"<span class=\"vm\">-</span>") + "</td>" +
       "<td class=\"r va\">" + (v.a>0?fmt(v.a):"<span class=\"vm\">-</span>") + "</td>" +
       "<td class=\"r vf\">" + (v.f>0?fmt(v.f):"<span class=\"vm\">-</span>") + "</td>" +
-      "<td class=\"r vt\">" + fmt(v.p+v.a+v.f) + "</td></tr>";
+      "<td class=\"r vt\">" + fmt(v.p+v.a+v.f) + "</td>" + brCell + "</tr>";
   });
-  rows.push("<tr class=\"trt\"><td>Total</td><td class=\"r\">" + fmt(tP) + "</td><td class=\"r\">" + fmt(tA) + "</td><td class=\"r\">" + fmt(tF) + "</td><td class=\"r\">" + fmt(tP+tA+tF) + "</td></tr>");
+  var totBrCell = hasMeta ? ("<td class=\"r\">" + fmt(tBR) + "</td>") : "";
+  rows.push("<tr class=\"trt\"><td>Total</td><td class=\"r\">" + fmt(tP) + "</td><td class=\"r\">" + fmt(tA) + "</td><td class=\"r\">" + fmt(tF) + "</td><td class=\"r\">" + fmt(tP+tA+tF) + "</td>" + totBrCell + "</tr>");
   tb.innerHTML = rows.join("");
 }
 
