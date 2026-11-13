@@ -621,28 +621,28 @@ body.pm .card-menu  { display:none !important; }
 .tabb.on{color:var(--azd);border-bottom-color:var(--az)}
 .q-avisos{font-size:11.5px;color:#92400E;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:7px 11px;margin-bottom:12px}
 .q-avisos.q-erro{color:#991B1B;background:#FEF2F2;border-color:#FECACA;font-weight:600}
-.qt{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;border:2px solid #1A202C}
-.qt th.qh{padding:10px 12px;font-size:12px;font-weight:600;text-align:center;line-height:1.35;color:#1A202C;border:1px solid #fff}
-.qt th.qh0{background:#4472C4;color:#fff;font-size:15px;width:16%}
+.qt{width:auto;border-collapse:collapse;font-size:17px;font-variant-numeric:tabular-nums;border:2px solid #1A202C}
+.qt th.qh{padding:10px 14px;font-size:16px;font-weight:600;text-align:center;line-height:1.35;color:#1A202C;border:1px solid #fff}
+.qt th.qh0{background:#4472C4;color:#fff;font-size:20px;min-width:230px}
 .qt th.qh1{background:#2F5597;color:#fff}
 .qt th.qh2{background:#4472C4;color:#fff}
 .qt th.qh3{background:#B4C6E7}
 .qt th.qh4{background:#FFE699}
 .qt th.qh5{background:#C6E0B4}
-.qt td{padding:5px 10px;border:1px solid #E5E7EB;background:#fff}
+.qt td{padding:6px 14px;border:1px solid #E5E7EB;background:#fff}
 .qt td.qr{text-align:right}
 .qt td.ql{text-align:left;white-space:nowrap}
-.qt tr.qop td{background:#D9E1F2;font-weight:700;font-size:15px}
-.qt tr.qop td.ql{font-size:15px}
+.qt tr.qop td{background:#D9E1F2;font-weight:700;font-size:20px}
+.qt tr.qop td.ql{font-size:20px}
 .qt tr.qop:hover td{background:#C9D5EE}
 .qt tr.qgr:hover td{background:var(--az8)}
 .qt tr.qtot td{background:#8EA9DB;font-weight:700;border-top:2px solid #1A202C}
-.qseta{display:inline-block;width:14px;color:#2F5597;font-size:11px}
+.qseta{display:inline-block;width:20px;color:#2F5597;font-size:14px}
 .qneg{color:#C00000;font-weight:600}
 .qt tr.qop .qneg,.qt tr.qtot .qneg{font-weight:700}
 .qz{color:var(--t3)}
-.qt td.qmeta{padding:0;width:15%;min-width:110px}
-.qbarw{position:relative;height:100%;min-height:26px;display:flex;align-items:center;justify-content:flex-end;padding:0 6px}
+.qt td.qmeta{padding:0;min-width:150px}
+.qbarw{position:relative;height:100%;min-height:32px;display:flex;align-items:center;justify-content:flex-end;padding:0 6px}
 .qbar{position:absolute;left:0;top:0;bottom:0;background:#5B8BD0;border:1px solid #1F3864;border-left:none}
 .qpct{position:relative;z-index:1;font-weight:600}
 .qt tr.qtot .qbar{background:#5B8BD0}
@@ -688,7 +688,7 @@ body.pm .card-menu  { display:none !important; }
     </div>
     <div class="hbadge">
       <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Base: <strong>13/11/2026 10:28</strong>
+      Base: <strong>13/11/2026 10:46</strong>
     </div>
     <!--BADGE_EXCEL_PLACEHOLDER-->
     <button class="upbtn" id="upbtn">
@@ -806,12 +806,12 @@ body.pm .card-menu  { display:none !important; }
         <div class="shl"></div>
       </div>
       <div class="q-avisos" id="q-avisos" style="display:none"></div>
-      <div class="card" id="card_q_op" style="margin-bottom:16px;overflow:hidden">
+      <div class="card" id="card_q_op" style="margin-bottom:16px;overflow:hidden;width:fit-content;max-width:100%">
         <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_q_op','Quadro_BR_Fluxo_por_OP')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_q_op')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button></div>
         <div class="ch"><div><div class="ct">Por OP e Grupo de Cliente</div><div class="csb">Clique na OP para recolher ou expandir os grupos</div></div></div>
         <div style="overflow-x:auto"><table class="qt" id="q-op"></table></div>
       </div>
-      <div class="card" id="card_q_bu" style="margin-bottom:32px;overflow:hidden">
+      <div class="card" id="card_q_bu" style="margin-bottom:32px;overflow:hidden;width:fit-content;max-width:100%">
         <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_q_bu','Quadro_BR_Fluxo_por_BU')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_q_bu')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button></div>
         <div class="ch"><div><div class="ct">Por BU</div></div></div>
         <div style="overflow-x:auto"><table class="qt" id="q-bu"></table></div>
