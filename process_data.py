@@ -14,7 +14,11 @@ df = df[df["PREV . PAG"].notna()].copy()
 df["PREV_PAG_DT"] = df["PREV . PAG"].dt.strftime("%Y-%m-%d")
 df["MES"]         = df["PREV . PAG"].dt.strftime("%Y-%m")
 df["VL_FAT"]      = df["VL. FATURADO"].fillna(0)
-df["PMR_DIAS"]    = (df["PREV . PAG"] - df["MES SERVICO"]).dt.days.fillna(-1).astype(int)
+# Data de pagamento efetiva (coluna DATA PAG.), usada no rotulo "Recebido ate DD.MM" do Quadro BR x Fluxo
+if "DATA PAG." in df.columns:
+    df["DATA_PAG"] = pd.to_datetime(df["DATA PAG."], errors="coerce").dt.strftime("%Y-%m-%d").fillna("")
+else:
+    df["DATA_PAG"] = ""
 for c in ["Grupo Cliente","CLIENTE","Excecutivo","BU","Vertical","Diretor de Operações","STATUS"]:
     df[c] = df[c].fillna("").astype(str).str.strip()
 df["DirOP"] = df["Diretor de Operações"]
@@ -24,8 +28,8 @@ df["VL_RISCO"]    = pd.to_numeric(df["Risco"], errors="coerce").fillna(0)
 df["NIVEL_RISCO"] = df["NIVEL RISCO"].fillna("").astype(str).str.strip().str.lower()
 
 cols = ["MES","PREV_PAG_DT","Excecutivo","Grupo Cliente","CLIENTE",
-        "BU","Vertical","DirOP","STATUS","VL_FAT","PMR_DIAS",
-        "VL_RISCO","NIVEL_RISCO"]
+        "BU","Vertical","DirOP","STATUS","VL_FAT",
+        "VL_RISCO","NIVEL_RISCO","DATA_PAG"]
 raw_json = json.dumps(df[cols].to_dict("records"), ensure_ascii=True)
 print(f"{len(df)} registros processados")
 

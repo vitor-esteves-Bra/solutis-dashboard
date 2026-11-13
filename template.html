@@ -200,10 +200,6 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
 .xbtn{background:none;border:none;cursor:pointer;color:var(--t3);
   padding:0 5px 0 0;font-size:11px;line-height:1;vertical-align:middle}
 .xbtn:hover{color:var(--az)}
-.pmrp{display:inline-flex;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:700}
-.pmr-ok{background:var(--pgb);color:var(--pg)}
-.pmr-wn{background:var(--abb);color:var(--ab)}
-.pmr-rk{background:#FEF2F2;color:#DC2626}
 .toast{position:fixed;bottom:22px;right:22px;background:var(--sf);border:1px solid var(--bd);
   border-radius:var(--rm);padding:10px 15px;font-size:12.5px;color:var(--t1);
   display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.09);
@@ -546,8 +542,6 @@ body{background:var(--bg);color:var(--t1);font-family:var(--fn);font-size:14px;l
   div[style*="height:175px"] { height: 155px !important; }
   div[style*="height:160px"] { height: 140px !important; }
 
-  /* PMR pills */
-  .pmrp { font-size: 10px; padding: 2px 6px; }
 }
 
 @media (max-width: 400px) {
@@ -620,6 +614,39 @@ body.pm .card-menu  { display:none !important; }
   padding:24px;max-width:92vw;max-height:92vh;overflow:auto;
   min-width:560px;
 }
+/* ── Abas e Quadro BR x Fluxo ── */
+.tabbar{display:flex;gap:6px;margin-bottom:16px;border-bottom:2px solid var(--dv)}
+.tabb{background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;padding:9px 16px;font:600 13px var(--fn);color:var(--t3);cursor:pointer}
+.tabb:hover{color:var(--azd)}
+.tabb.on{color:var(--azd);border-bottom-color:var(--az)}
+.q-avisos{font-size:11.5px;color:#92400E;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:7px 11px;margin-bottom:12px}
+.q-avisos.q-erro{color:#991B1B;background:#FEF2F2;border-color:#FECACA;font-weight:600}
+.qt{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;border:2px solid #1A202C}
+.qt th.qh{padding:10px 12px;font-size:12px;font-weight:600;text-align:center;line-height:1.35;color:#1A202C;border:1px solid #fff}
+.qt th.qh0{background:#4472C4;color:#fff;font-size:15px;width:16%}
+.qt th.qh1{background:#2F5597;color:#fff}
+.qt th.qh2{background:#4472C4;color:#fff}
+.qt th.qh3{background:#B4C6E7}
+.qt th.qh4{background:#FFE699}
+.qt th.qh5{background:#C6E0B4}
+.qt td{padding:5px 10px;border:1px solid #E5E7EB;background:#fff}
+.qt td.qr{text-align:right}
+.qt td.ql{text-align:left;white-space:nowrap}
+.qt tr.qop td{background:#D9E1F2;font-weight:700;font-size:15px}
+.qt tr.qop td.ql{font-size:15px}
+.qt tr.qop:hover td{background:#C9D5EE}
+.qt tr.qgr:hover td{background:var(--az8)}
+.qt tr.qtot td{background:#8EA9DB;font-weight:700;border-top:2px solid #1A202C}
+.qseta{display:inline-block;width:14px;color:#2F5597;font-size:11px}
+.qneg{color:#C00000;font-weight:600}
+.qt tr.qop .qneg,.qt tr.qtot .qneg{font-weight:700}
+.qz{color:var(--t3)}
+.qt td.qmeta{padding:0;width:15%;min-width:110px}
+.qbarw{position:relative;height:100%;min-height:26px;display:flex;align-items:center;justify-content:flex-end;padding:0 6px}
+.qbar{position:absolute;left:0;top:0;bottom:0;background:#5B8BD0;border:1px solid #1F3864;border-left:none}
+.qpct{position:relative;z-index:1;font-weight:600}
+.qt tr.qtot .qbar{background:#5B8BD0}
+.qvazio{text-align:center;color:var(--t3);padding:22px!important}
 </style>
 </head>
 <body>
@@ -725,6 +752,11 @@ body.pm .card-menu  { display:none !important; }
     </div>
   </aside>
   <main class="cnt">
+    <div class="tabbar" id="tabbar">
+      <button class="tabb on" data-tab="geral" onclick="qTab('geral')">Vis&atilde;o Geral</button>
+      <button class="tabb" data-tab="quadro" onclick="qTab('quadro')">Quadro BR x Fluxo</button>
+    </div>
+    <div id="pg-geral">
     <div class="sh">
       <div class="shi"><svg width="14" height="14" fill="none" stroke="var(--az)" stroke-width="2.2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
       <div><div class="sht">Visao de Caixa</div><div class="shs">Valores em R$ &middot; Posicao da carteira</div></div>
@@ -766,36 +798,23 @@ body.pm .card-menu  { display:none !important; }
         </table>
       </div>
     </div>
-    <div class="sh">
-      <div class="shi"><svg width="14" height="14" fill="none" stroke="var(--az)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
-      <div><div class="sht">Carteira por Diretoria de Operacoes</div><div class="shs">Valores em R$</div></div>
-      <div class="shl"></div>
-    </div>
-    <div class="card" id="card_operacao" style="margin-bottom:16px">
-      <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_operacao','Desempenho_por_Operacao')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_operacao')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button><button class="card-menu-btn" onclick="expandCard('card_operacao')" title="Expandir"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>Expandir</button></div>
-      <div class="ch"><div><div class="ct">Desempenho por Operacao</div><div class="csb">Pago &middot; Em Aberto &middot; A Faturar</div></div></div>
-      <div style="position:relative;height:160px;margin-bottom:14px"><canvas id="ch-op"></canvas></div>
-      <div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th class="l">Operacao</th><th class="r">Pago</th><th class="r">Em Aberto</th><th class="r">A Faturar</th><th class="r">Total</th><th class="r" id="th-op-br" style="display:none">Business Review</th></tr></thead>
-          <tbody id="tb-op"></tbody>
-        </table>
+    </div><!-- /pg-geral -->
+    <div id="pg-quadro" style="display:none">
+      <div class="sh">
+        <div class="shi"><svg width="14" height="14" fill="none" stroke="var(--az)" stroke-width="2.2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="9" x2="9" y2="21"/></svg></div>
+        <div><div class="sht">Quadro BR x Fluxo</div><div class="shs">Valores em R$ &middot; <span id="q-sub">-</span></div></div>
+        <div class="shl"></div>
       </div>
-    </div>
-    <div class="sh">
-      <div class="shi"><svg width="14" height="14" fill="none" stroke="var(--az)" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-      <div><div class="sht">Prazo Medio de Recebimento por Cliente</div><div class="shs">Dias entre Mes de Servico e Prev. Pagamento</div></div>
-      <div class="shl"></div>
-    </div>
-    <div class="card" id="card_pmr" style="margin-bottom:32px">
-      <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_pmr','PMR_por_Grupo')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_pmr')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button><button class="card-menu-btn" onclick="expandCard('card_pmr')" title="Expandir"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>Expandir</button></div>
-      <div class="ch"><div><div class="ct">PMR por Grupo de Cliente</div>
-        <div class="csb">Prazo medio contratual &middot; Bradesco e Santander fixados em 30 dias</div></div></div>
-      <div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th class="l">Grupo Cliente</th><th class="r">PMR Medio (dias)</th><th class="r">NFs</th><th class="r">Classificacao</th></tr></thead>
-          <tbody id="tb-pmr"></tbody>
-        </table>
+      <div class="q-avisos" id="q-avisos" style="display:none"></div>
+      <div class="card" id="card_q_op" style="margin-bottom:16px;overflow:hidden">
+        <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_q_op','Quadro_BR_Fluxo_por_OP')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_q_op')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button></div>
+        <div class="ch"><div><div class="ct">Por OP e Grupo de Cliente</div><div class="csb">Clique na OP para recolher ou expandir os grupos</div></div></div>
+        <div style="overflow-x:auto"><table class="qt" id="q-op"></table></div>
+      </div>
+      <div class="card" id="card_q_bu" style="margin-bottom:32px;overflow:hidden">
+        <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_q_bu','Quadro_BR_Fluxo_por_BU')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_q_bu')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button></div>
+        <div class="ch"><div><div class="ct">Por BU</div></div></div>
+        <div style="overflow-x:auto"><table class="qt" id="q-bu"></table></div>
       </div>
     </div>
   </main>
@@ -877,7 +896,6 @@ document.getElementById("logoimg").src = LOGO;
 // ── CONSTANTES ───────────────────────────────────────────────────────────
 var MN = {"01":"Jan","02":"Fev","03":"Mar","04":"Abr","05":"Mai","06":"Jun",
           "07":"Jul","08":"Ago","09":"Set","10":"Out","11":"Nov","12":"Dez"};
-var FIXED_PMR = ["SANTANDER","BRADESCO","BV RENDIMENTO"];
 
 // ── ESTADO ───────────────────────────────────────────────────────────────
 var F = {ano:"all", mes:[], st:"all", exec:"all", grp:"all", bu:"all", vert:"all", dir:"all"};
@@ -1105,6 +1123,7 @@ function populateSels() {
 
 // ── RENDER PRINCIPAL ──────────────────────────────────────────────────────
 function render() {
+  try { rQuadro(); } catch (eq) { console.error("rQuadro", eq); }
   var data = applyF();
   var tot = 0, p = 0, a = 0, f = 0, nfs = data.length, nfp = 0, totalRisco = 0;
   var riscoGrupos = {};
@@ -1151,8 +1170,6 @@ function render() {
   });
   rKPI(tot, p, a, f, nfs, nfp, taxa, totalRisco, riscoGrupos, totalBR, mesesBR, faturarGrupos, pagoGruposMap, brGruposMap);
   rGrupo(data);
-  rOPs(data);
-  rPMR(data);
   rBRV();
 }
 
@@ -1723,114 +1740,6 @@ function renderSemanal(thead, tbody, grupos, gMap, cMap, sems, wkFlags, hasPago,
 
 
 
-// ── OPs ───────────────────────────────────────────────────────────────────
-// Lista sempre OP1..OP4 (mesmo com valor zero) e adiciona barra comparativa
-// com Business Review (meses ja encerrados) ou Forecast (mes atual/futuro),
-// somando os meses ativos no filtro (F.mes) e respeitando Grupo/BU/Executivo.
-var OPS_FIXAS = ["OP1","OP2","OP3","OP4"];
-
-function rOPs(data) {
-  kch("op");
-  var byO = {};
-  OPS_FIXAS.forEach(function(o){ byO[o] = {p:0,a:0,f:0}; });
-  data.forEach(function(r) {
-    var o = r.DirOP || "-";
-    if (!byO[o]) byO[o] = {p:0,a:0,f:0};
-    if      (r.STATUS === "PAGO")       byO[o].p += r.VL_FAT;
-    else if (r.STATUS === "EM ABERTO")  byO[o].a += r.VL_FAT;
-    else                                byO[o].f += r.VL_FAT;
-  });
-
-  // Meta (Business Review / Forecast) por operacao, somando os meses do filtro
-  var curMesRef = new Date();
-  var curMM = curMesRef.getMonth() + 1;
-  var curMesKey = curMesRef.getFullYear() + "-" + (curMM < 10 ? "0" + curMM : "" + curMM);
-  var brByO = {};
-  var hasMeta = false;
-  var metaLabel = "Business Review";
-  if (F.mes.length > 0) {
-    var algumFuturo = F.mes.some(function(m){ return m >= curMesKey; });
-    metaLabel = algumFuturo ? "Forecast" : "Business Review";
-    F.mes.forEach(function(m) {
-      var registros = BR_HISTORICO[m];
-      if (!registros) return;
-      registros.forEach(function(r) {
-        var grpUp = normGrp(r.GRP);
-        if (F.grp  !== "all" && grpUp  !== normGrp(F.grp))       return;
-        if (F.bu   !== "all" && r.BU   !== F.bu)                 return;
-        if (F.exec !== "all" && r.EXEC !== F.exec)               return;
-        var o = r.OP || "-";
-        if (!byO[o]) byO[o] = {p:0,a:0,f:0};
-        brByO[o] = (brByO[o] || 0) + r.VL;
-        hasMeta = true;
-      });
-    });
-  }
-
-  var extras = Object.keys(byO).filter(function(o){ return OPS_FIXAS.indexOf(o) < 0; }).sort();
-  var ops = OPS_FIXAS.concat(extras);
-
-  var ctx = document.getElementById("ch-op");
-  if (ctx) {
-    var ds2 = [];
-    if (ops.some(function(o){return byO[o].p>0;})) ds2.push({label:"Pago",     stack:"atual", data:ops.map(function(o){return byO[o].p;}),backgroundColor:"rgba(14,159,110,.80)",borderRadius:4,borderSkipped:false});
-    if (ops.some(function(o){return byO[o].a>0;})) ds2.push({label:"Em Aberto",stack:"atual", data:ops.map(function(o){return byO[o].a;}),backgroundColor:"rgba(217,119,6,.75)", borderRadius:4,borderSkipped:false});
-    if (ops.some(function(o){return byO[o].f>0;})) ds2.push({label:"A Faturar",stack:"atual", data:ops.map(function(o){return byO[o].f;}),backgroundColor:"rgba(99,102,241,.70)",borderRadius:4,borderSkipped:false});
-    if (hasMeta) ds2.push({label:metaLabel, stack:"meta", data:ops.map(function(o){return brByO[o]||0;}),backgroundColor:"rgba(100,116,139,.55)",borderRadius:4,borderSkipped:false});
-    CH["op"] = new Chart(ctx, {
-      type:"bar", data:{labels:ops,datasets:ds2},
-      options:{responsive:true,maintainAspectRatio:false,indexAxis:"y",
-        plugins:{legend:{position:"bottom",labels:{padding:10}},tooltip:{callbacks:{label:function(c){return " "+c.dataset.label+": "+fmt(c.raw);}}}},
-        scales:{x:{grid:{color:"#EDF2F7"},border:{display:false},ticks:{callback:function(v){return fmt(v);}}},
-                y:{grid:{display:false},border:{display:false}}}}
-    });
-  }
-  var tb = document.getElementById("tb-op"); if (!tb) return;
-  var thBr = document.getElementById("th-op-br");
-  if (thBr) { thBr.textContent = metaLabel; thBr.style.display = hasMeta ? "" : "none"; }
-  var tP=0,tA=0,tF=0,tBR=0;
-  var rows = ops.map(function(o) {
-    var v = byO[o]; tP+=v.p; tA+=v.a; tF+=v.f;
-    var brv = brByO[o] || 0; tBR += brv;
-    var brCell = hasMeta ? ("<td class=\"r\">" + (brv>0?fmt(brv):"<span class=\"vm\">-</span>") + "</td>") : "";
-    return "<tr><td style=\"font-weight:600\">" + o + "</td>" +
-      "<td class=\"r vp\">" + (v.p>0?fmt(v.p):"<span class=\"vm\">-</span>") + "</td>" +
-      "<td class=\"r va\">" + (v.a>0?fmt(v.a):"<span class=\"vm\">-</span>") + "</td>" +
-      "<td class=\"r vf\">" + (v.f>0?fmt(v.f):"<span class=\"vm\">-</span>") + "</td>" +
-      "<td class=\"r vt\">" + fmt(v.p+v.a+v.f) + "</td>" + brCell + "</tr>";
-  });
-  var totBrCell = hasMeta ? ("<td class=\"r\">" + fmt(tBR) + "</td>") : "";
-  rows.push("<tr class=\"trt\"><td>Total</td><td class=\"r\">" + fmt(tP) + "</td><td class=\"r\">" + fmt(tA) + "</td><td class=\"r\">" + fmt(tF) + "</td><td class=\"r\">" + fmt(tP+tA+tF) + "</td>" + totBrCell + "</tr>");
-  tb.innerHTML = rows.join("");
-}
-
-// ── PMR ───────────────────────────────────────────────────────────────────
-function rPMR(data) {
-  var byG = {};
-  data.filter(function(r){ return r.PMR_DIAS >= 0; }).forEach(function(r) {
-    var g = r["Grupo Cliente"] || "-";
-    if (!byG[g]) byG[g] = {sum:0, n:0};
-    byG[g].sum += r.PMR_DIAS; byG[g].n++;
-  });
-  var rows = Object.keys(byG).map(function(g) {
-    var v = byG[g];
-    var isFixed = FIXED_PMR.some(function(fx){ return g.toUpperCase().indexOf(fx) >= 0; });
-    var avg = isFixed ? 30 : Math.round(v.sum / v.n);
-    return {g:g, avg:avg, n:v.n, fixed:isFixed};
-  }).sort(function(a,b){ return a.avg - b.avg; });
-
-  var tb = document.getElementById("tb-pmr"); if (!tb) return;
-  tb.innerHTML = rows.map(function(r) {
-    var cls = r.avg <= 20 ? "pmr-ok" : r.avg <= 35 ? "pmr-wn" : "pmr-rk";
-    return "<tr>" +
-      "<td style=\"font-weight:600\">" + r.g + "</td>" +
-      "<td class=\"r\"><span class=\"pmrp " + cls + "\">" + r.avg + "d</span></td>" +
-      "<td class=\"r vm\">" + r.n + "</td>" +
-      "<td class=\"r\"><span style=\"font-size:10.5px;color:" + (r.fixed?"var(--t3)":"var(--pg)") + "\">" + (r.fixed?"Contratual":"Calculado") + "</span></td>" +
-      "</tr>";
-  }).join("");
-}
-
 // ── COMPARATIVO FLUXO ATUAL x BUSINESS REVIEW (mes selecionado no filtro) ──
 var MES_NOME = { "01":"Janeiro","02":"Fevereiro","03":"Marco","04":"Abril","05":"Maio","06":"Junho",
                  "07":"Julho","08":"Agosto","09":"Setembro","10":"Outubro","11":"Novembro","12":"Dezembro" };
@@ -2048,6 +1957,190 @@ function rBRV() {
     }
   }
 }
+
+// ── QUADRO BR x FLUXO (aba nova) ──────────────────────────────────────────
+// Quadro por OP (com grupos) e por BU: BR/Forecast, Fluxo, Recebido, Saldo e Meta.
+//  - Fluxo    = Pago + Em Aberto + A Faturar, mes pela Prev. Pag. (RAW.VL_FAT)
+//  - Recebido = so STATUS "PAGO"; o rotulo "ate DD.MM" usa a coluna DATA PAG. do Excel
+//  - Saldo    = Recebido - Fluxo
+//  - Meta     = Recebido / BR (meses encerrados) ou Forecast (mes atual/futuro), mesma
+//               regra do antigo card Desempenho por Operacao; o BR_HISTORICO guarda os dois
+//  - Respeita Ano, Mes, Diretoria, Executivo, Grupo, BU e Vertical. NAO respeita Status.
+//  - Sem mes marcado no menu: usa o mes atual (ou o ultimo mes com dados).
+var QMN = ["","Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+var qOpen = {};   // OP -> false quando recolhido (padrao: aberto)
+
+function qExecKey(s) {
+  s = (s || "").toString().trim().toUpperCase();
+  return s === "JOSÉ NETO COELHO" ? "JOSÉ NETO" : s;
+}
+function qNum(v) { return Math.round(v).toLocaleString("pt-BR"); }
+function qSaldo(v) {
+  var r = Math.round(v);
+  if (r === 0) return "<span class=\"qz\">-</span>";
+  return r < 0 ? "<span class=\"qneg\">(" + Math.abs(r).toLocaleString("pt-BR") + ")</span>" : qNum(r);
+}
+function qPct(v, t) { return t > 0 ? Math.round(v / t * 100) : null; }
+function qMesesAnalise() {
+  if (F.mes.length) return F.mes.slice().sort();
+  var d = new Date(), mm = d.getMonth() + 1;
+  var cur = d.getFullYear() + "-" + (mm < 10 ? "0" + mm : "" + mm);
+  var seen = {};
+  RAW.forEach(function(r) { if (F.ano === "all" || r.MES.slice(0,4) === F.ano) seen[r.MES] = 1; });
+  var all = Object.keys(seen).sort();
+  if (all.indexOf(cur) >= 0) return [cur];
+  return all.length ? [all[all.length - 1]] : [];
+}
+function qAdd(map, key, meta, campo, v) {
+  var o = map[key];
+  if (!o) { o = map[key] = {meta: meta, flux: 0, rec: 0, br: 0, recM: 0}; }
+  o[campo] += v;
+}
+function qAgrega(meses, mesesBR) {
+  var opMap = {}, buMap = {}, maxPag = "", nRaw = 0;
+  RAW.forEach(function(r) {
+    if (meses.indexOf(r.MES) < 0) return;
+    if (F.exec !== "all" && qExecKey(r["Excecutivo"]) !== qExecKey(F.exec)) return;
+    if (F.grp  !== "all" && normGrp(r["Grupo Cliente"]) !== normGrp(F.grp)) return;
+    if (F.bu   !== "all" && r.BU !== F.bu) return;
+    if (F.vert !== "all" && r.Vertical !== F.vert) return;
+    if (F.dir  !== "all" && r.DirOP !== F.dir) return;
+    nRaw++;
+    var op = r.DirOP || "Sem OP", g = normGrp(r["Grupo Cliente"]) || "OUTROS", bu = r.BU || "Sem BU";
+    var v = r.VL_FAT || 0, ok = r.STATUS === "PAGO", okBR = mesesBR.indexOf(r.MES) >= 0;
+    var k = op + "|" + g;
+    qAdd(opMap, k, {op: op, grp: g}, "flux", v);
+    qAdd(buMap, bu, {bu: bu}, "flux", v);
+    if (ok) {
+      qAdd(opMap, k, {op: op, grp: g}, "rec", v);
+      qAdd(buMap, bu, {bu: bu}, "rec", v);
+      if (okBR) { qAdd(opMap, k, {op: op, grp: g}, "recM", v); qAdd(buMap, bu, {bu: bu}, "recM", v); }
+      if (r.DATA_PAG && r.DATA_PAG > maxPag) maxPag = r.DATA_PAG;
+    }
+  });
+  mesesBR.forEach(function(m) {
+    (BR_HISTORICO[m] || []).forEach(function(r) {
+      if (F.exec !== "all" && qExecKey(r.EXEC) !== qExecKey(F.exec)) return;
+      if (F.grp  !== "all" && normGrp(r.GRP) !== normGrp(F.grp)) return;
+      if (F.bu   !== "all" && r.BU !== F.bu) return;
+      if (F.vert !== "all" && r.VERT !== F.vert) return;
+      if (F.dir  !== "all" && r.OP !== F.dir) return;
+      var op = r.OP || "Sem OP", g = normGrp(r.GRP) || "OUTROS", bu = r.BU || "Sem BU";
+      qAdd(opMap, op + "|" + g, {op: op, grp: g}, "br", r.VL || 0);
+      qAdd(buMap, bu, {bu: bu}, "br", r.VL || 0);
+    });
+  });
+  return {opMap: opMap, buMap: buMap, maxPag: maxPag, nRaw: nRaw};
+}
+function qSoma(lista) {
+  var t = {flux: 0, rec: 0, br: 0, recM: 0};
+  lista.forEach(function(o) { t.flux += o.flux; t.rec += o.rec; t.br += o.br; t.recM += o.recM; });
+  return t;
+}
+function qMetaCell(rec, br, hasBR, tot) {
+  var p = hasBR ? qPct(rec, br) : null;
+  if (p === null) return "<td class=\"qmeta\"><span class=\"qz\">-</span></td>";
+  var w = Math.min(p, 100);
+  return "<td class=\"qmeta\"><div class=\"qbarw\"><div class=\"qbar\" style=\"width:" + w + "%\"></div><span class=\"qpct\">" + p + "%</span></div></td>";
+}
+function qLinha(cls, rotulo, o, hasBR, opKey) {
+  var click = opKey ? " onclick=\"qToggle('" + opKey + "')\" style=\"cursor:pointer\"" : "";
+  var seta = "";
+  if (opKey) seta = "<span class=\"qseta\">" + (qOpen[opKey] === false ? "&#9656;" : "&#9662;") + "</span>";
+  return "<tr class=\"" + cls + "\"" + click + "><td class=\"ql\">" + seta + rotulo + "</td>" +
+    "<td class=\"qr\">" + (hasBR ? qNum(o.br) : "<span class=\"qz\">-</span>") + "</td>" +
+    "<td class=\"qr\">" + qNum(o.flux) + "</td>" +
+    "<td class=\"qr\">" + qNum(o.rec) + "</td>" +
+    "<td class=\"qr\">" + qSaldo(o.rec - o.flux) + "</td>" +
+    qMetaCell(o.recM, o.br, hasBR) + "</tr>";
+}
+function qCabecalho(primeira, lblBase, lblPer, lblRec) {
+  return "<thead><tr>" +
+    "<th class=\"qh qh0\">" + primeira + "</th>" +
+    "<th class=\"qh qh1\">" + lblBase + "<br>" + lblPer + "</th>" +
+    "<th class=\"qh qh2\">Fluxo<br>" + lblPer + "</th>" +
+    "<th class=\"qh qh3\">" + lblRec + "</th>" +
+    "<th class=\"qh qh4\">Saldo a Receber<br>" + lblPer + "</th>" +
+    "<th class=\"qh qh5\">Meta Alcançada</th></tr></thead>";
+}
+function rQuadro() {
+  var elOp = document.getElementById("q-op"), elBu = document.getElementById("q-bu");
+  if (!elOp || !elBu) return;
+  var meses = qMesesAnalise();
+  var mesesBR = meses.filter(function(m) { return !!BR_HISTORICO[m]; });
+  var hasBR = mesesBR.length > 0;
+  var d = new Date(), mm = d.getMonth() + 1;
+  var curKey = d.getFullYear() + "-" + (mm < 10 ? "0" + mm : "" + mm);
+  var algumFuturo = meses.some(function(m) { return m >= curKey; });
+  var lblBase = algumFuturo ? "Forecast" : "BR";
+  var lblPer = meses.length === 1 ? (QMN[parseInt(meses[0].slice(5), 10)] + (meses[0].slice(0,4) !== String(d.getFullYear()) ? "/" + meses[0].slice(2,4) : "")) : (meses.length + " meses");
+  if (!meses.length) lblPer = "-";
+  var A = qAgrega(meses, mesesBR);
+  var lblRec = "Recebido";
+  if (A.maxPag) { var p = A.maxPag.split("-"); lblRec = "Recebido<br>até " + p[2] + "." + p[1]; }
+
+  // ── tabela por OP (grupos embaixo) ──
+  var opLista = {};
+  Object.keys(A.opMap).forEach(function(k) {
+    var o = A.opMap[k]; (opLista[o.meta.op] = opLista[o.meta.op] || []).push(o);
+  });
+  var fixas = ["OP1","OP2","OP3","OP4"];
+  var ops = fixas.slice();
+  Object.keys(opLista).filter(function(o) { return fixas.indexOf(o) < 0 && o !== "Sem OP"; }).sort().forEach(function(o) { ops.push(o); });
+  if (opLista["Sem OP"]) ops.push("Sem OP");
+  var htmlOp = qCabecalho("OP", lblBase, lblPer, lblRec) + "<tbody>";
+  var todas = [];
+  if (!Object.keys(A.opMap).length) {
+    htmlOp += "<tr><td colspan=\"6\" class=\"qvazio\">Sem dados para os filtros selecionados.</td></tr>";
+  } else {
+    ops.forEach(function(op) {
+      var lista = (opLista[op] || []).slice().sort(function(a, b) {
+        return (b.flux - a.flux) || (b.br - a.br) || (a.meta.grp < b.meta.grp ? -1 : 1);
+      });
+      var tOp = qSoma(lista); todas = todas.concat(lista);
+      htmlOp += qLinha("qop", op, tOp, hasBR, op);
+      if (qOpen[op] !== false) lista.forEach(function(o) { htmlOp += qLinha("qgr", o.meta.grp, o, hasBR, null); });
+    });
+  }
+  var tTot = qSoma(todas);
+  htmlOp += qLinha("qtot", "Total Geral", tTot, hasBR, null) + "</tbody>";
+  elOp.innerHTML = htmlOp;
+
+  // ── tabela por BU ──
+  var bus = Object.keys(A.buMap).sort(function(a, b) {
+    return (A.buMap[b].flux - A.buMap[a].flux) || (A.buMap[b].br - A.buMap[a].br) || (a < b ? -1 : 1);
+  });
+  var htmlBu = qCabecalho("BU", lblBase, lblPer, lblRec) + "<tbody>";
+  if (!bus.length) htmlBu += "<tr><td colspan=\"6\" class=\"qvazio\">Sem dados para os filtros selecionados.</td></tr>";
+  bus.forEach(function(b) { htmlBu += qLinha("qgr qbu", b, A.buMap[b], hasBR, null); });
+  var tBu = qSoma(bus.map(function(b) { return A.buMap[b]; }));
+  htmlBu += qLinha("qtot", "Total Geral", tBu, hasBR, null) + "</tbody>";
+  elBu.innerHTML = htmlBu;
+
+  // ── avisos e conferencia de totais ──
+  var avisos = [];
+  if (!F.mes.length && meses.length) avisos.push("Nenhum mês marcado no menu: mostrando " + lblPer + ".");
+  if (!hasBR && meses.length) avisos.push("Sem BR/Forecast registrado para o período: colunas BR e Meta ficam em branco.");
+  else if (hasBR && mesesBR.length < meses.length) avisos.push("BR/Forecast registrado em " + mesesBR.length + " de " + meses.length + " meses; a Meta considera só esses meses.");
+  var difs = Math.abs(tTot.flux - tBu.flux) + Math.abs(tTot.rec - tBu.rec) + Math.abs(tTot.br - tBu.br);
+  var erro = difs > 1;
+  if (erro) { avisos.push("ATENÇÃO: os totais por OP e por BU não conferem. Avise o time de Data Analytics."); console.error("rQuadro: totais divergentes", tTot, tBu); }
+  var el = document.getElementById("q-avisos");
+  if (el) { el.textContent = avisos.join(" "); el.className = "q-avisos" + (erro ? " q-erro" : ""); el.style.display = avisos.length ? "" : "none"; }
+  var sub = document.getElementById("q-sub");
+  if (sub) sub.textContent = "Meta = Recebido ÷ " + (algumFuturo ? "Forecast" : "BR") + " · Saldo = Recebido − Fluxo · Status não se aplica a este quadro";
+}
+window.qToggle = function(op) { qOpen[op] = (qOpen[op] === false); rQuadro(); };
+window.qTab = function(t) {
+  var g = document.getElementById("pg-geral"), q = document.getElementById("pg-quadro");
+  if (!g || !q) return;
+  g.style.display = (t === "quadro") ? "none" : "";
+  q.style.display = (t === "quadro") ? "" : "none";
+  document.querySelectorAll(".tabb").forEach(function(b) { b.classList.toggle("on", b.getAttribute("data-tab") === t); });
+  if (t === "quadro") { try { rQuadro(); } catch (e) { console.error("rQuadro", e); } }
+  else { render(); }
+  window.scrollTo(0, 0);
+};
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 document.getElementById("lup").textContent = new Date().toLocaleDateString("pt-BR");
@@ -2393,7 +2486,7 @@ document.addEventListener('keydown', function(e) {
   // CTRL+SHIFT+P → PNG do card em foco (primeiro visível)
   if (e.key === 'P') {
     e.preventDefault();
-    var cards = ['card_receb_grupo','card_meta','card_operacao','card_pmr'];
+    var cards = ['card_receb_grupo','card_meta'];
     if (cards[0]) exportCardPng(cards[0], 'Dashboard_Recebimentos');
   }
   // CTRL+SHIFT+C → Copiar primeiro card
