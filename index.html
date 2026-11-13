@@ -688,7 +688,7 @@ body.pm .card-menu  { display:none !important; }
     </div>
     <div class="hbadge">
       <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Base: <strong>13/11/2026 10:04</strong>
+      Base: <strong>13/11/2026 10:28</strong>
     </div>
     <!--BADGE_EXCEL_PLACEHOLDER-->
     <button class="upbtn" id="upbtn">
@@ -1963,8 +1963,8 @@ function rBRV() {
 //  - Fluxo    = Pago + Em Aberto + A Faturar, mes pela Prev. Pag. (RAW.VL_FAT)
 //  - Recebido = so STATUS "PAGO"; o rotulo "ate DD.MM" usa a coluna DATA PAG. do Excel
 //  - Saldo    = Recebido - Fluxo
-//  - Meta     = Recebido / BR (meses encerrados) ou Forecast (mes atual/futuro), mesma
-//               regra do antigo card Desempenho por Operacao; o BR_HISTORICO guarda os dois
+//  - Meta     = Recebido / BR ou Forecast; o rotulo e Forecast em Abril, Julho e Outubro e BR
+//               nos demais meses; o BR_HISTORICO guarda os dois
 //  - Respeita Ano, Mes, Diretoria, Executivo, Grupo, BU e Vertical. NAO respeita Status.
 //  - Sem mes marcado no menu: usa o mes atual (ou o ultimo mes com dados).
 var QMN = ["","Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -2069,10 +2069,12 @@ function rQuadro() {
   var meses = qMesesAnalise();
   var mesesBR = meses.filter(function(m) { return !!BR_HISTORICO[m]; });
   var hasBR = mesesBR.length > 0;
-  var d = new Date(), mm = d.getMonth() + 1;
-  var curKey = d.getFullYear() + "-" + (mm < 10 ? "0" + mm : "" + mm);
-  var algumFuturo = meses.some(function(m) { return m >= curKey; });
-  var lblBase = algumFuturo ? "Forecast" : "BR";
+  var d = new Date();
+  // Rotulo da base: Forecast nos meses Abril, Julho e Outubro; BR nos demais (regra do Vitor, 13/11/2026)
+  var tipos = {};
+  meses.forEach(function(m) { var mm = m.slice(5); tipos[(mm === "04" || mm === "07" || mm === "10") ? "Forecast" : "BR"] = 1; });
+  var tk = Object.keys(tipos);
+  var lblBase = tk.length === 1 ? tk[0] : (tk.length ? "BR/Forecast" : "BR");
   var lblPer = meses.length === 1 ? (QMN[parseInt(meses[0].slice(5), 10)] + (meses[0].slice(0,4) !== String(d.getFullYear()) ? "/" + meses[0].slice(2,4) : "")) : (meses.length + " meses");
   if (!meses.length) lblPer = "-";
   var A = qAgrega(meses, mesesBR);
@@ -2128,7 +2130,7 @@ function rQuadro() {
   var el = document.getElementById("q-avisos");
   if (el) { el.textContent = avisos.join(" "); el.className = "q-avisos" + (erro ? " q-erro" : ""); el.style.display = avisos.length ? "" : "none"; }
   var sub = document.getElementById("q-sub");
-  if (sub) sub.textContent = "Meta = Recebido ÷ " + (algumFuturo ? "Forecast" : "BR") + " · Saldo = Recebido − Fluxo · Status não se aplica a este quadro";
+  if (sub) sub.textContent = "Meta = Recebido ÷ " + lblBase + " · Saldo = Recebido − Fluxo · Status não se aplica a este quadro";
 }
 window.qToggle = function(op) { qOpen[op] = (qOpen[op] === false); rQuadro(); };
 window.qTab = function(t) {
