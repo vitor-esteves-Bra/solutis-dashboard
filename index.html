@@ -646,6 +646,7 @@ body.pm .card-menu  { display:none !important; }
 .qbar{position:absolute;left:0;top:0;bottom:0;background:#5B8BD0;border:1px solid #1F3864;border-left:none}
 .qpct{position:relative;z-index:1;font-weight:600}
 .qt tr.qtot .qbar{background:#5B8BD0}
+.qct{font-size:22px;font-weight:700;color:var(--azd)}
 .qvazio{text-align:center;color:var(--t3);padding:22px!important}
 </style>
 </head>
@@ -688,7 +689,7 @@ body.pm .card-menu  { display:none !important; }
     </div>
     <div class="hbadge">
       <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Base: <strong>13/11/2026 10:46</strong>
+      Base: <strong>13/11/2026 10:58</strong>
     </div>
     <!--BADGE_EXCEL_PLACEHOLDER-->
     <button class="upbtn" id="upbtn">
@@ -808,12 +809,12 @@ body.pm .card-menu  { display:none !important; }
       <div class="q-avisos" id="q-avisos" style="display:none"></div>
       <div class="card" id="card_q_op" style="margin-bottom:16px;overflow:hidden;width:fit-content;max-width:100%">
         <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_q_op','Quadro_BR_Fluxo_por_OP')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_q_op')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button></div>
-        <div class="ch"><div><div class="ct">Por OP e Grupo de Cliente</div><div class="csb">Clique na OP para recolher ou expandir os grupos</div></div></div>
+        <div class="ch"><div><div class="ct qct">Por OP e Grupo de Cliente</div><div class="csb" data-noexport>Clique na OP para recolher ou expandir os grupos</div></div></div>
         <div style="overflow-x:auto"><table class="qt" id="q-op"></table></div>
       </div>
       <div class="card" id="card_q_bu" style="margin-bottom:32px;overflow:hidden;width:fit-content;max-width:100%">
         <div class="card-menu"><button class="card-menu-btn" onclick="exportCardPng('card_q_bu','Quadro_BR_Fluxo_por_BU')" title="Baixar PNG"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>PNG</button><button class="card-menu-btn" onclick="copyCardImg('card_q_bu')" title="Copiar imagem"><svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copiar</button></div>
-        <div class="ch"><div><div class="ct">Por BU</div></div></div>
+        <div class="ch"><div><div class="ct qct">Por BU</div></div></div>
         <div style="overflow-x:auto"><table class="qt" id="q-bu"></table></div>
       </div>
     </div>
@@ -2046,7 +2047,7 @@ function qMetaCell(rec, br, hasBR, tot) {
 function qLinha(cls, rotulo, o, hasBR, opKey) {
   var click = opKey ? " onclick=\"qToggle('" + opKey + "')\" style=\"cursor:pointer\"" : "";
   var seta = "";
-  if (opKey) seta = "<span class=\"qseta\">" + (qOpen[opKey] === false ? "&#9656;" : "&#9662;") + "</span>";
+  if (opKey) seta = "<span class=\"qseta\" data-noexport>" + (qOpen[opKey] === false ? "&#9656;" : "&#9662;") + "</span>";
   return "<tr class=\"" + cls + "\"" + click + "><td class=\"ql\">" + seta + rotulo + "</td>" +
     "<td class=\"qr\">" + (hasBR ? qNum(o.br) : "<span class=\"qz\">-</span>") + "</td>" +
     "<td class=\"qr\">" + qNum(o.flux) + "</td>" +
@@ -2330,7 +2331,11 @@ function captureCard(cardId, callback) {
 
   // 1. Esconde menus
   var menus = el.querySelectorAll('.card-menu');
-  menus.forEach(function(m){ m.style.opacity = '0'; m.style.pointerEvents = 'none'; });
+  menus.forEach(function(m){ m.style.transition = 'none'; m.style.opacity = '0'; m.style.pointerEvents = 'none'; m.style.display = 'none'; });
+  // Elementos so de tela (setas de expandir, legenda de clique) nao entram no PNG/Copiar
+  var noexp = el.querySelectorAll('[data-noexport]');
+  var noexpSaved = [];
+  noexp.forEach(function(x){ noexpSaved.push({ el: x, d: x.style.display }); x.style.display = 'none'; });
 
   // 2. Expande todos os scrollers internos para capturar conteúdo completo
   var scrollers = el.querySelectorAll('[style*="overflow"]');
@@ -2376,7 +2381,8 @@ function captureCard(cardId, callback) {
       s.el.style.height    = s.h;
       s.el.style.maxHeight = s.maxH;
     });
-    menus.forEach(function(m){ m.style.opacity = ''; m.style.pointerEvents = ''; });
+    menus.forEach(function(m){ m.style.opacity = ''; m.style.pointerEvents = ''; m.style.display = ''; m.style.transition = ''; });
+    noexpSaved.forEach(function(s){ s.el.style.display = s.d; });
   }
 }
 
